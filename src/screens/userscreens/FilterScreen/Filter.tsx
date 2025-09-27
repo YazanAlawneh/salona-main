@@ -44,7 +44,7 @@ const FilterScreen: React.FC = () => {
       }
 
       const response = await fetch(
-        'https://spa.dev2.prodevr.com/api/categories',
+        'https://bella-glam.com/api/categories',
         {
           headers: {
             'Authorization': `Bearer ${token}`,

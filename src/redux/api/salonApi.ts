@@ -36,7 +36,11 @@ export interface NearbySalon {
 }
 
 // API Configuration
-const API_BASE_URL = 'https://spa.dev2.prodevr.com/api';
+// Previous API URL (commented out)
+// const API_BASE_URL = 'https://spa.dev2.prodevr.com/api';
+
+// New API URL
+const API_BASE_URL = 'https://bella-glam.com/api';
 
 const prepareHeaders = async (headers: Headers) => {
   try {

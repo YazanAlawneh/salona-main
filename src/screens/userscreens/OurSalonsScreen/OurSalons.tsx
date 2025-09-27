@@ -92,7 +92,7 @@ const OurSalonsScreen: React.FC = () => {
       const token = await AsyncStorage.getItem('token');
       
       const response = await fetch(
-        `https://spa.dev2.prodevr.com/api/nearby-salons?latitude=${latitude}&longitude=${longitude}&radius=1000000`,
+        `https://bella-glam.com/api/nearby-salons?latitude=${latitude}&longitude=${longitude}&radius=1000000`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -140,7 +140,7 @@ const OurSalonsScreen: React.FC = () => {
     try {
       setLoading(true);
       const token = await AsyncStorage.getItem('token');
-      const url = new URL('https://spa.dev2.prodevr.com/api/salons');
+      const url = new URL('https://bella-glam.com/api/salons');
       if (category_id) {
         url.searchParams.append('category_id', category_id.toString());
       }

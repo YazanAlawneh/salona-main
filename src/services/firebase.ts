@@ -272,7 +272,7 @@ export const sendTokenToBackend = async (token: string) => {
     }
 
     // Send the token to your backend
-    const response = await fetch('https://spa.dev2.prodevr.com/api/users/fcm-token', {
+    const response = await fetch('https://bella-glam.com/api/users/fcm-token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

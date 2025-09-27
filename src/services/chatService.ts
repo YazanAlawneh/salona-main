@@ -34,7 +34,11 @@ const database = getDatabase(app);
 
 class ChatService {
   private static instance: ChatService;
-  private API_URL = 'https://spa.dev2.prodevr.com/api';
+  // Previous API URL (commented out)
+  // private API_URL = 'https://spa.dev2.prodevr.com/api';
+  
+  // New API URL
+  private API_URL = 'https://bella-glam.com/api';
 
   private constructor() {
     console.log('ChatService initialized');

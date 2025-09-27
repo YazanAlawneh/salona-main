@@ -29,6 +29,7 @@ import {
   useToggleFavoriteSalonMutation,
 } from '../../../redux/api/salonApi';
 import {useTranslation} from '../../../contexts/TranslationContext';
+import {useGuestMode} from '../../../contexts/GuestModeContext';
 import {useGetUserAddressesQuery} from '../../../redux/api/addressApi';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -37,6 +38,7 @@ import {RootState} from '../../../redux/store';
 import PortfolioGrid from './components/PortfolioGrid ';
 import PackagesList from './components/Packages';
 import ReviewConfirmModal from './components/ReviewConfirmModal';
+import GuestRestrictedModal from '../../../components/GuestRestrictedModal/GuestRestrictedModal';
 
 type SalonProfileRouteProp = RouteProp<
   {
@@ -79,7 +81,9 @@ const SalonProfileScreen = () => {
   const [dateModalVisible, setDateModalVisible] = useState(false);
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
   const {t, isRTL} = useTranslation();
+  const {isGuestMode, exitToLogin, exitToSignup} = useGuestMode();
   const [isFavorite, setIsFavorite] = useState(false);
+  const [guestRestrictedModalVisible, setGuestRestrictedModalVisible] = useState(false);
   const [salonAddress, setSalonAddress] = useState<string>('');
   const {data: addressData} = useGetUserAddressesQuery();
   const [portfolioModalVisible, setPortfolioModalVisible] = useState(false);
@@ -104,7 +108,7 @@ const SalonProfileScreen = () => {
       if (!token) return;
 
       const response = await fetch(
-        `https://spa.dev2.prodevr.com/api/is-salon-favourite/${salon.id}`,
+        `https://bella-glam.com/api/is-salon-favourite/${salon.id}`,
         {
           method: 'GET',
           headers: {
@@ -134,8 +138,24 @@ const SalonProfileScreen = () => {
   }, [salon.id]);
 
   const handleContinue = () => {
+    if (isGuestMode) {
+      setGuestRestrictedModalVisible(true);
+      return;
+    }
     setModalVisible(false);
     setDateModalVisible(true);
+  };
+
+  const handleGuestModalLogin = () => {
+    setGuestRestrictedModalVisible(false);
+    // Exit guest mode and go to login screen
+    exitToLogin();
+  };
+
+  const handleGuestModalSignup = () => {
+    setGuestRestrictedModalVisible(false);
+    // Exit guest mode and go to signup screen
+    exitToSignup();
   };
 
   const toggleService = (id: string, service: any) => {
@@ -387,7 +407,13 @@ const SalonProfileScreen = () => {
         {Object.values(selectedPackages).length > 0 && (
           <TouchableOpacity
             style={styles.continueButton}
-            onPress={() => setModalVisible(true)}>
+            onPress={() => {
+              if (isGuestMode) {
+                setGuestRestrictedModalVisible(true);
+                return;
+              }
+              setModalVisible(true);
+            }}>
             <Text style={styles.continueButtonText}>
               {t.salonProfile.packages.actions.continue}
             </Text>
@@ -474,6 +500,11 @@ const SalonProfileScreen = () => {
                   <TouchableOpacity
                     style={modalStyles.continueButton}
                     onPress={() => {
+                      if (isGuestMode) {
+                        setGuestRestrictedModalVisible(true);
+                        setModalVisible(false);
+                        return;
+                      }
                       setModalVisible(false);
                       setDateModalVisible(true);
                     }}>
@@ -613,12 +644,24 @@ const SalonProfileScreen = () => {
           onBookingSuccess={handleBookingSuccess}
           service_fee={salonData?.salons?.service_fee || 0}
         />
+        <GuestRestrictedModal
+          visible={guestRestrictedModalVisible}
+          onClose={() => setGuestRestrictedModalVisible(false)}
+          onLogin={handleGuestModalLogin}
+          onSignup={handleGuestModalSignup}
+        />
         {activeTab === 'Services' &&
           Object.values(selectedServices).length > 0 && (
             <View style={modalStyles.stickyContinueContainer}>
               <TouchableOpacity
                 style={modalStyles.stickyContinueButton}
-                onPress={() => setModalVisible(true)}>
+                onPress={() => {
+                  if (isGuestMode) {
+                    setGuestRestrictedModalVisible(true);
+                    return;
+                  }
+                  setModalVisible(true);
+                }}>
                 <Text style={modalStyles.stickyContinueButtonText}>
                   {t.salonProfile.services.actions.continue}
                 </Text>

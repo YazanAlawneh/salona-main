@@ -31,11 +31,12 @@ export const useAddress = () => {
 
     try {
       setFetchingAddresses(true);
-      const response = await fetch('https://spa.dev2.prodevr.com/api/addresses', {
+      const response = await fetch('https://bella-glam.com/api/addresses', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json',
+          'Content-Type': 'application/json',
         },
       });
 
@@ -92,7 +93,7 @@ export const useAddress = () => {
 
       setLoading(true);
 
-      const response = await fetch('https://spa.dev2.prodevr.com/api/new-address', {
+      const response = await fetch('https://bella-glam.com/api/new-address', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -179,11 +180,12 @@ export const useAddress = () => {
           onPress: async () => {
             try {
               setLoading(true);
-              const response = await fetch(`https://spa.dev2.prodevr.com/api/addresses/${addressId}`, {
+              const response = await fetch(`https://bella-glam.com/api/addresses/${addressId}`, {
                 method: 'DELETE',
                 headers: {
                   'Authorization': `Bearer ${token}`,
                   'Accept': 'application/json',
+                  'Content-Type': 'application/json',
                 },
               });
 
@@ -218,7 +220,7 @@ export const useAddress = () => {
         throw new Error('Address not found'); 
       }
 
-      const response = await fetch(`https://spa.dev2.prodevr.com/api/update-address/${addressId}`, {
+      const response = await fetch(`https://bella-glam.com/api/update-address/${addressId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -555,6 +555,7 @@ export const ar = {
   },
   common: {
     viewAll: 'عرض الكل',
+    cancel: 'إلغاء',
   },
   booking: {
     book: 'حجز',
@@ -824,5 +825,15 @@ export const ar = {
     openingTime: 'وقت البدء ',
     closingTime: 'وقت الانتهاء ',
     open: 'مفتوح في هذا اليوم',
+  },
+  guestMode: {
+    browseAsGuest: 'تصفح كضيف',
+    guestModeDescription: 'استكشف خدماتنا دون إنشاء حساب',
+    loginRequired: 'تسجيل الدخول مطلوب',
+    loginRequiredMessage: 'لحجز موعد، يرجى تسجيل الدخول إلى حسابك أو إنشاء حساب جديد.',
+    login: 'تسجيل الدخول',
+    signup: 'إنشاء حساب',
+    continueAsGuest: 'متابعة كضيف',
+    exitGuestMode: 'الخروج من وضع الضيف',
   },
 };

@@ -40,7 +40,7 @@ import {
   useCreateAddressMutation,
   useUpdatePrimaryAddressMutation,
 } from '../../../redux/api/salonApi';
-import {skip} from '@reduxjs/toolkit/query';
+// import {skip} from '@reduxjs/toolkit/query';
 import {Package} from '../../../components/PackagesSection/PackagesSection';
 import messaging from '@react-native-firebase/messaging';
 import {GOOGLE_MAPS_API_KEY} from '@env';
@@ -212,13 +212,11 @@ const HomeScreen: React.FC = () => {
             longitude: selectedAddress.longitude,
             radius: 20,
           }
-        : skip,
-      {
-        skip:
-          !selectedAddress ||
-          !selectedAddress.latitude ||
-          !selectedAddress.longitude,
-      },
+        : {
+            latitude: 0,
+            longitude: 0,
+            radius: 20,
+          },
     );
 
   // Extract data from RTK Query responses

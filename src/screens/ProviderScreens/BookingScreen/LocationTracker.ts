@@ -23,7 +23,7 @@ import { useTranslation } from '../../../contexts/TranslationContext';
 const POLL_INTERVAL = 15_000;         // 15 seconds
 const LOCATION_TIMEOUT = 10_000;      // 10 seconds
 const BACKEND_URL =
-  'https://spa.dev2.prodevr.com/api/update-salon-address';     // change as needed
+  'https://bella-glam.com/api/update-salon-address';     // Updated to new API URL
 /* ╚═══════════════════════════════════════════════════════════╝ */
 
 /* ────────────────────────── PERMISSIONS ────────────────────────── */

@@ -611,6 +611,7 @@ export const en = {
   },
   common: {
     viewAll: 'View All',
+    cancel: 'Cancel',
   },
   booking: {
     book: 'Book',
@@ -846,5 +847,15 @@ export const en = {
     openingTime: 'Opening Time ',
     closingTime: 'Closing Time ',
     open: 'Open on this day',
+  },
+  guestMode: {
+    browseAsGuest: 'Browse as Guest',
+    guestModeDescription: 'Explore our services without creating an account',
+    loginRequired: 'Login Required',
+    loginRequiredMessage: 'To book an appointment, please log in to your account or create a new one.',
+    login: 'Login',
+    signup: 'Sign Up',
+    continueAsGuest: 'Continue as Guest',
+    exitGuestMode: 'Exit Guest Mode',
   },
 };
