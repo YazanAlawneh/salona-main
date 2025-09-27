@@ -13,6 +13,8 @@ import {
   TextInput,
   StyleSheet,
   StatusBar,
+  Pressable,
+  Touchable,
 } from 'react-native';
 // import Icon from 'react-native-vector-icons/MaterialIcons';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -31,6 +33,7 @@ import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {Salon} from '../../../types/salon';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useTranslation} from '../../../contexts/TranslationContext';
+import {useGuestMode} from '../../../contexts/GuestModeContext';
 import {
   useGetAllSalonsQuery,
   useGetPackagesQuery,
@@ -49,6 +52,7 @@ import SearchBarWithMenu from '../../../components/SearchBarWithMenu/SearchBarWi
 import {Address} from '../../userscreens/EditLocation/types';
 import DeliveryLocationSheet from './components/DeliveryLocatioinSheet';
 import Swiper from 'react-native-swiper';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
 interface ExtendedSalon extends Salon {
   working_hours?: any[];
@@ -160,12 +164,12 @@ const HomeScreen: React.FC = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   const dispatch = useDispatch();
   const {t, isRTL} = useTranslation();
-  
+
   // Debug translation loading
   console.log('HomeScreen - Translation loaded:', {
     search_here: t.home.search_here,
     currentLanguage: t ? 'loaded' : 'not loaded',
-    isRTL
+    isRTL,
   });
   const [currentLocation, setCurrentLocation] = useState<{
     lat: number;
@@ -173,8 +177,10 @@ const HomeScreen: React.FC = () => {
   } | null>(null);
   const [isAddressModalVisible, setIsAddressModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showLocationPermissionModal, setShowLocationPermissionModal] = useState(false);
-  const [hasRequestedLocationPermission, setHasRequestedLocationPermission] = useState(false);
+  const [showLocationPermissionModal, setShowLocationPermissionModal] =
+    useState(false);
+  const [hasRequestedLocationPermission, setHasRequestedLocationPermission] =
+    useState(false);
 
   // RTK Query hooks
   const {data: salonsData, isLoading: salonsLoading} = useGetAllSalonsQuery({});
@@ -200,8 +206,6 @@ const HomeScreen: React.FC = () => {
   const selectedAddress = useSelector(
     (state: RootState) => state.salons.selectedAddress,
   );
-
-
 
   // Nearby salons query - only runs when we have coordinates
   const {data: nearbySalonsData, isLoading: nearbySalonsLoading} =
@@ -260,33 +264,31 @@ const HomeScreen: React.FC = () => {
     categoriesLoading,
   });
 
-
-
   const handleLocationPermissionAllow = async () => {
     setShowLocationPermissionModal(false);
     setHasRequestedLocationPermission(true);
-    
+
     try {
       // For Android, request location permission
       if (Platform.OS === 'android') {
         const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
           // Permission granted, get current location using Geolocation
           const Geolocation = require('@react-native-community/geolocation');
           Geolocation.getCurrentPosition(
-            (position) => {
+            position => {
               setCurrentLocation({
                 lat: position.coords.latitude,
-                lng: position.coords.longitude
+                lng: position.coords.longitude,
               });
               console.log('Location permission granted and location obtained');
             },
-            (error) => {
+            error => {
               console.error('Error getting location:', error);
             },
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+            {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
           );
         }
       } else {
@@ -320,34 +322,37 @@ const HomeScreen: React.FC = () => {
     [dispatch, updatePrimaryAddress],
   );
 
-  const handleCurrentLocationSelect = useCallback((locationData) => {
-    if (locationData) {
-      // Use the location data passed from the sheet
-      const currentLocationAddress = {
-        id: locationData.id || 'current-location',
-        description: locationData.description || 'Current Location',
-        latitude: locationData.latitude,
-        longitude: locationData.longitude,
-        isPrimary: false,
-        isFavorite: false,
-      };
-      handleAddressSelect(currentLocationAddress);
-    } else if (currentLocation) {
-      // Fallback to existing currentLocation if no data passed
-      const currentLocationAddress = {
-        id: 'current-location',
-        description: 'Current Location',
-        latitude: currentLocation.lat,
-        longitude: currentLocation.lng,
-        isPrimary: false,
-        isFavorite: false,
-      };
-      handleAddressSelect(currentLocationAddress);
-    } else {
-      // No location available, show message or handle accordingly
-      console.log('No current location available');
-    }
-  }, [currentLocation, handleAddressSelect]);
+  const handleCurrentLocationSelect = useCallback(
+    locationData => {
+      if (locationData) {
+        // Use the location data passed from the sheet
+        const currentLocationAddress = {
+          id: locationData.id || 'current-location',
+          description: locationData.description || 'Current Location',
+          latitude: locationData.latitude,
+          longitude: locationData.longitude,
+          isPrimary: false,
+          isFavorite: false,
+        };
+        handleAddressSelect(currentLocationAddress);
+      } else if (currentLocation) {
+        // Fallback to existing currentLocation if no data passed
+        const currentLocationAddress = {
+          id: 'current-location',
+          description: 'Current Location',
+          latitude: currentLocation.lat,
+          longitude: currentLocation.lng,
+          isPrimary: false,
+          isFavorite: false,
+        };
+        handleAddressSelect(currentLocationAddress);
+      } else {
+        // No location available, show message or handle accordingly
+        console.log('No current location available');
+      }
+    },
+    [currentLocation, handleAddressSelect],
+  );
 
   const handleAddNewAddress = useCallback(() => {
     setIsAddressModalVisible(false);
@@ -436,6 +441,7 @@ const HomeScreen: React.FC = () => {
     }
   };
 
+  const {isGuestMode, exitToLogin, exitToSignup} = useGuestMode();
   // Initialize location permission check on mount
   useEffect(() => {
     // Check if we should show location permission modal
@@ -448,7 +454,7 @@ const HomeScreen: React.FC = () => {
         } else {
           // For Android, check current permission status
           const granted = await PermissionsAndroid.check(
-            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           );
           if (!granted && !hasRequestedLocationPermission) {
             setShowLocationPermissionModal(true);
@@ -466,8 +472,6 @@ const HomeScreen: React.FC = () => {
     checkLocationPermission();
     requestUserPermission();
   }, [hasRequestedLocationPermission]);
-
-
 
   // Set primary address when addresses are loaded
   useEffect(() => {
@@ -587,9 +591,8 @@ const HomeScreen: React.FC = () => {
     }, [pkg.id]);
 
     return (
-      <View style={[styles.packageContainer ]}>
-        <View
-          style={styles.packageCard}>
+      <View style={[styles.packageContainer]}>
+        <View style={styles.packageCard}>
           <View style={styles.packageImageContainer}>
             <Image
               source={image}
@@ -663,45 +666,43 @@ const HomeScreen: React.FC = () => {
     );
   });
 
-  const SearchBar = useCallback(
-    () => {
-      console.log('SearchBar render - search_here translation:', t.home.search_here);
-      return (
-        <View style={styles.searchContainer}>
-          <View style={styles.searchSection}>
-            <TouchableOpacity
-              style={styles.searchField}
-              onPress={handleGoSearch}
-              activeOpacity={0.9}>
-              <Icon
-                style={styles.searchIcon}
-                name="search-outline"
-                size={20}
-                color={Colors.gold}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder={t.home.search_here}
-                placeholderTextColor={Colors.hardGray}
-                editable={false} // prevent typing
-                pointerEvents="none" // prevent touch
-              />
-            </TouchableOpacity>
-            
+  const SearchBar = useCallback(() => {
+    console.log(
+      'SearchBar render - search_here translation:',
+      t.home.search_here,
+    );
+    return (
+      <View style={styles.searchContainer}>
+        <View style={styles.searchSection}>
+          <TouchableOpacity
+            style={styles.searchField}
+            onPress={handleGoSearch}
+            activeOpacity={0.9}>
+            <Icon
+              style={styles.searchIcon}
+              name="search-outline"
+              size={20}
+              color={Colors.gold}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder={t.home.search_here}
+              placeholderTextColor={Colors.hardGray}
+              editable={false} // prevent typing
+              pointerEvents="none" // prevent touch
+            />
+          </TouchableOpacity>
 
-            
-            <TouchableOpacity
-              style={styles.optionButton}
-              activeOpacity={0.9}
-              onPress={handleGoFilter}>
-              <Icon name="options-outline" size={26} color={Colors.gold} />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={styles.optionButton}
+            activeOpacity={0.9}
+            onPress={handleGoFilter}>
+            <Icon name="options-outline" size={26} color={Colors.gold} />
+          </TouchableOpacity>
         </View>
-      );
-    },
-    [handleGoSearch, handleGoFilter, t.home.search_here],
-  );
+      </View>
+    );
+  }, [handleGoSearch, handleGoFilter, t.home.search_here]);
 
   // const bottomSheetRef = useRef<BottomSheetModal>(null);
 
@@ -826,12 +827,30 @@ const HomeScreen: React.FC = () => {
                   </View>
                   <Icon name="location-sharp" size={18} color={Colors.black} />
                 </TouchableOpacity>
+                {isGuestMode && (
+                  <TouchableOpacity
+                    activeOpacity={0.6}
+                    onPress={exitToLogin}
+                    style={styles.exitGuestModeButton}>
+                    <Text style={styles.exitGuestModeText}>
+                      {t.home.exitGuestMode}
+                    </Text>
+                  </TouchableOpacity>
+                )}
 
-                <TouchableOpacity
+                {!isGuestMode && (
+                  <TouchableOpacity
+                    style={styles.notificationIconContainer}
+                    onPress={() => navigation.navigate('NotificationsScreen')}>
+                    <Icon name="notifications" size={20} color={Colors.black} />
+                  </TouchableOpacity>
+                )}
+
+                {/* <TouchableOpacity
                   style={styles.notificationIconContainer}
                   onPress={() => navigation.navigate('NotificationsScreen')}>
                   <Icon name="notifications" size={20} color={Colors.black} />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </View>
               <SearchBar />
             </View>
@@ -924,7 +943,7 @@ const HomeScreen: React.FC = () => {
               </View>
               {/* categories */}
 
-              <View style={[styles.sectionSpacing2 , {marginTop: 20}]}>
+              <View style={[styles.sectionSpacing2, {marginTop: 20}]}>
                 <Text style={styles.sectionTitle}>{t.home.ourCategories}</Text>
                 <ScrollView
                   horizontal
@@ -935,7 +954,9 @@ const HomeScreen: React.FC = () => {
                       <TouchableOpacity
                         key={category.id}
                         style={styles.serviceItem}
-                        onPress={() => handleCategoryPress(category.id, category.name)}>
+                        onPress={() =>
+                          handleCategoryPress(category.id, category.name)
+                        }>
                         <Image
                           source={
                             category.image_url
@@ -955,7 +976,7 @@ const HomeScreen: React.FC = () => {
                 </ScrollView>
               </View>
 
-              <View style={[styles.sectionSpacing2 , {marginTop: 20}]}>
+              <View style={[styles.sectionSpacing2, {marginTop: 20}]}>
                 <BeautyServicesSection
                   title={t.home.nearbySalons}
                   data={mappedSalons.slice(0, 4)}
@@ -976,8 +997,8 @@ const HomeScreen: React.FC = () => {
         </ScrollView>
       )}
       {/* </View> */}
-      <Footer />
-      
+      {!isGuestMode && <Footer />}
+
       {/* Location Permission Modal */}
       <LocationPermissionModal
         visible={showLocationPermissionModal}

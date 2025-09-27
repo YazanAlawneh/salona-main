@@ -558,6 +558,7 @@ export const en = {
     defaultProfession: 'Salon',
   },
   home: {
+    exitGuestMode: 'Exit Guest Mode',
     useCurrentLocation: 'Current Location',
     location: 'Location',
     currency: 'JOD',
@@ -592,7 +593,8 @@ export const en = {
     differentLocation: 'Different location',
     locationPermission: {
       title: 'Location Access Required',
-      message: 'We need access to your current location to show you nearby salons and provide better service.',
+      message:
+        'We need access to your current location to show you nearby salons and provide better service.',
       allowButton: 'Allow Location Access',
       notNowButton: 'Not Now',
       icon: '📍',
@@ -668,7 +670,7 @@ export const en = {
       hour: 'hr',
       minute: 'min',
       and: 'and',
-      noServices: 'No services selected'
+      noServices: 'No services selected',
     },
     errors: {
       authenticationMessage: 'Please log in again to continue.',
@@ -852,7 +854,8 @@ export const en = {
     browseAsGuest: 'Browse as Guest',
     guestModeDescription: 'Explore our services without creating an account',
     loginRequired: 'Login Required',
-    loginRequiredMessage: 'To book an appointment, please log in to your account or create a new one.',
+    loginRequiredMessage:
+      'To book an appointment, please log in to your account or create a new one.',
     login: 'Login',
     signup: 'Sign Up',
     continueAsGuest: 'Continue as Guest',

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, {useEffect} from 'react';
 import {
   View,
   ImageBackground,
@@ -6,8 +6,8 @@ import {
   StatusBar,
   TouchableOpacity,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRoute } from '@react-navigation/native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {useRoute} from '@react-navigation/native';
 import styles from './LoginSignup.styles';
 import CustomButton from '../../../components/CustomButton/CustomButton';
 import Colors from '../../../constants/Colors';
@@ -20,8 +20,9 @@ const LoginSignupScreen = ({navigation}: {navigation: any}) => {
   const {t} = useTranslation();
   const {setGuestMode} = useGuestMode();
   const route = useRoute();
-  const { targetScreen } = (route.params as { targetScreen?: 'login' | 'signup' | null }) || {};
-  
+  const {targetScreen} =
+    (route.params as {targetScreen?: 'login' | 'signup' | null}) || {};
+
   const handleLogin = () => {
     navigation.navigate('LoginScreen');
   };
@@ -32,7 +33,7 @@ const LoginSignupScreen = ({navigation}: {navigation: any}) => {
     //get to work copilot
     navigation.navigate('SignupScreen');
   };
-  
+
   const handleGuestMode = () => {
     setGuestMode(true);
   };
@@ -41,7 +42,7 @@ const LoginSignupScreen = ({navigation}: {navigation: any}) => {
   useEffect(() => {
     console.log('LoginSignupScreen - targetScreen:', targetScreen);
     console.log('LoginSignupScreen - route.params:', route.params);
-    
+
     if (targetScreen === 'signup') {
       // Navigate to signup screen after a short delay to ensure screen is mounted
       const timer = setTimeout(() => {
@@ -52,11 +53,11 @@ const LoginSignupScreen = ({navigation}: {navigation: any}) => {
   }, [targetScreen, navigation, route.params]);
 
   return (
-    <SafeAreaView style={{flex: 1}}>
-      <ImageBackground
-        source={require('../../../assets/images/onboarding-new.jpg')}
-        style={{flex: 1}}
-        resizeMode="cover">
+    <ImageBackground
+      source={require('../../../assets/images/onboarding-new.jpg')}
+      style={{flex: 1}}
+      resizeMode="cover">
+      <SafeAreaView style={{flex: 1}}>
         <View style={styles.container}>
           <TouchableOpacity
             onPress={handleProviderLogin}
@@ -87,7 +88,7 @@ const LoginSignupScreen = ({navigation}: {navigation: any}) => {
               <CustomButton
                 text={t.guestMode.browseAsGuest}
                 backgroundColor={Colors.gold}
-                textColor={Colors.white}
+                textColor={Colors.black}
                 onPress={handleGuestMode}
                 style={[styles.loginButton, {borderColor: Colors.gold}]}
               />
@@ -109,14 +110,16 @@ const LoginSignupScreen = ({navigation}: {navigation: any}) => {
                 {t.loginSignup.dontHaveAnAccount}
                 {'  '}
                 <TouchableOpacity onPress={handleSignup}>
-                  <Text style={styles.loginTxtSapan}>{t.loginSignup.signup}</Text>
+                  <Text style={styles.loginTxtSapan}>
+                    {t.loginSignup.signup}
+                  </Text>
                 </TouchableOpacity>
               </Text>
             </View>
           </LinearGradient>
         </View>
-      </ImageBackground>
-    </SafeAreaView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 };
 

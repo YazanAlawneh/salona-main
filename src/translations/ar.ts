@@ -502,6 +502,7 @@ export const ar = {
     defaultProfession: 'صالون',
   },
   home: {
+    exitGuestMode: 'الخروج من وضع الضيف',
     currentLocation: 'الموقع الحالي',
     location: 'الموقع',
     currency: 'د.أ',

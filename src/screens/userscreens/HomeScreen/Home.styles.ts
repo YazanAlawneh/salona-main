@@ -45,6 +45,22 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 12,
     backgroundColor: Colors.gold,
     paddingHorizontal: 8,
+    position: 'relative',
+  },
+  exitGuestModeButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)', // semi-transparent white
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)', // faint border for glass look
+    minWidth: 160,
+    alignItems: 'center',
+  },
+  exitGuestModeText: {
+    color: '#fff',
+    fontSize: 14,
+    fontFamily: Fonts.medium,
   },
   contentSection: {
     // paddingHorizontal: 16,
@@ -56,7 +72,6 @@ const styles = StyleSheet.create({
     // paddingStart: 8,
     marginStart: 8,
     paddingBottom: 20,
-   
   },
   headerRTL: {
     flexDirection: 'row-reverse',
@@ -263,7 +278,7 @@ const styles = StyleSheet.create({
     // alignItems: 'center',
     // justifyContent: 'space-between',
     minWidth: 40,
-    maxWidth: "80%",
+    maxWidth: '80%',
     paddingHorizontal: 4,
     // alignSelf: 'flex-end',
     justifyContent: 'flex-start',
@@ -422,8 +437,6 @@ const styles = StyleSheet.create({
     padding: 8,
     backgroundColor: '#ffffff60',
     borderRadius: 8,
-
-  
   },
   searchContainer: {
     height: 60,

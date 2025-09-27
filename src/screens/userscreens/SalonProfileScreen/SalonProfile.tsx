@@ -83,7 +83,8 @@ const SalonProfileScreen = () => {
   const {t, isRTL} = useTranslation();
   const {isGuestMode, exitToLogin, exitToSignup} = useGuestMode();
   const [isFavorite, setIsFavorite] = useState(false);
-  const [guestRestrictedModalVisible, setGuestRestrictedModalVisible] = useState(false);
+  const [guestRestrictedModalVisible, setGuestRestrictedModalVisible] =
+    useState(false);
   const [salonAddress, setSalonAddress] = useState<string>('');
   const {data: addressData} = useGetUserAddressesQuery();
   const [portfolioModalVisible, setPortfolioModalVisible] = useState(false);
@@ -484,8 +485,8 @@ const SalonProfileScreen = () => {
               <View>
                 <View style={modalStyles.summary}>
                   <Text style={modalStyles.summaryText}>
-                    {t.salonProfile.services.subtotal}: {totalPrice - serviceFees}{' '}
-                    {t.salonProfile.services.price}
+                    {t.salonProfile.services.subtotal}:{' '}
+                    {totalPrice - serviceFees} {t.salonProfile.services.price}
                   </Text>
                   <Text style={modalStyles.summaryText}>
                     {t.salonProfile.services.serviceFees}: {serviceFees}{' '}
@@ -509,10 +510,10 @@ const SalonProfileScreen = () => {
                       setDateModalVisible(true);
                     }}>
                     <Text style={modalStyles.bookButtonText}>
-                    {t.salonProfile.services.actions.continue}
+                      {t.salonProfile.services.actions.continue}
                     </Text>
                   </TouchableOpacity>
-                  
+
                   {/* <TouchableOpacity
                     style={modalStyles.bookButton}
                     onPress={() => {
@@ -571,8 +572,10 @@ const SalonProfileScreen = () => {
   // }, []);
   return (
     <View style={{flex: 1, position: 'relative'}}>
-      <StatusBar 
-        backgroundColor={modalVisible || dateModalVisible ? Colors.black : 'transparent'} 
+      <StatusBar
+        backgroundColor={
+          modalVisible || dateModalVisible ? Colors.black : 'transparent'
+        }
         barStyle="light-content"
         translucent={true}
       />
@@ -622,7 +625,7 @@ const SalonProfileScreen = () => {
             <View style={styles.content}>{renderContent()}</View>
           </View>
         </ScrollView>
-        <Footer />
+        {!isGuestMode && <Footer />}
         {renderModal()}
         <ReviewConfirmModal
           visible={reviewModalVisible}
@@ -652,7 +655,11 @@ const SalonProfileScreen = () => {
         />
         {activeTab === 'Services' &&
           Object.values(selectedServices).length > 0 && (
-            <View style={modalStyles.stickyContinueContainer}>
+            <View
+              style={[
+                modalStyles.stickyContinueContainer,
+                isGuestMode && {bottom: 0},
+              ]}>
               <TouchableOpacity
                 style={modalStyles.stickyContinueButton}
                 onPress={() => {

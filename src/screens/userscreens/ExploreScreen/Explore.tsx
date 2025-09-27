@@ -24,6 +24,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useTranslation} from '../../../contexts/TranslationContext';
 import {GOOGLE_MAPS_API_KEY} from '@env';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {useGuestMode} from '../../../contexts/GuestModeContext';
 const {width} = Dimensions.get('window');
 
 interface NearbySalon {
@@ -57,6 +58,7 @@ const ExploreScreen: React.FC = () => {
   const [categories, setCategories] = useState<string[] | undefined>();
   const [categoryNames, setCategoryNames] = useState<string[] | undefined>();
   const [nearbySalons, setNearbySalons] = useState<NearbySalon[]>([]);
+  const {isGuestMode, exitToLogin, exitToSignup} = useGuestMode();
   const [currentLocation, setCurrentLocation] = useState<{
     lat: number;
     lng: number;
@@ -71,7 +73,7 @@ const ExploreScreen: React.FC = () => {
       if (sort_by) setSortBy(sort_by as typeof sortBy);
       if (rating) setRating(rating);
       if (search) setSearchQuery(search);
-      
+
       // Handle category names and IDs separately
       if (categoryNames && categoryNames.length > 0) {
         // Set display names
@@ -273,14 +275,14 @@ const ExploreScreen: React.FC = () => {
   const mappedSalons = useMemo(() => {
     console.log('mappedSalons - salonsData:', salonsData);
     console.log('mappedSalons - salonsData.salons:', salonsData?.salons);
-    
+
     if (!salonsData?.salons) {
       console.log('No salons data available');
       return [];
     }
 
     console.log('Processing salons:', salonsData.salons.length);
-    
+
     const salonsWithDistance = salonsData.salons.map((salon: Salon) => {
       // Find matching nearby salon to get distance and travel time
       const nearbySalon = nearbySalons.find(ns => ns.id === salon.id);
@@ -318,7 +320,7 @@ const ExploreScreen: React.FC = () => {
       // If neither has distance, maintain original order
       return 0;
     });
-    
+
     console.log('Final mappedSalons:', sortedSalons.length, 'salons');
     return sortedSalons;
   }, [salonsData?.salons, nearbySalons]);
@@ -403,11 +405,11 @@ const ExploreScreen: React.FC = () => {
             />
 
             <Text style={styles.resultCount}>
-              {categoryNames && categoryNames.length > 0 
-                ? categoryNames[0] 
-                : searchQuery 
-                  ? `Search: ${searchQuery}`
-                  : t.explore.all}
+              {categoryNames && categoryNames.length > 0
+                ? categoryNames[0]
+                : searchQuery
+                ? `Search: ${searchQuery}`
+                : t.explore.all}
             </Text>
 
             <View
@@ -540,7 +542,7 @@ const ExploreScreen: React.FC = () => {
               />
             )}
           </View>
-          <Footer />
+          {!isGuestMode && <Footer />}
         </View>
       </SafeAreaView>
     </View>

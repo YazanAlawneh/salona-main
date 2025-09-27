@@ -7,8 +7,8 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native';
-import { useTranslation } from '../../contexts/TranslationContext';
-import { useGuestMode } from '../../contexts/GuestModeContext';
+import {useTranslation} from '../../contexts/TranslationContext';
+import {useGuestMode} from '../../contexts/GuestModeContext';
 import Colors from '../../constants/Colors';
 
 interface GuestRestrictedModalProps {
@@ -24,51 +24,48 @@ const GuestRestrictedModal: React.FC<GuestRestrictedModalProps> = ({
   onLogin,
   onSignup,
 }) => {
-  const { t } = useTranslation();
-  const { isRTL } = useTranslation();
+  const {t} = useTranslation();
+  const {isRTL} = useTranslation();
 
   return (
     <Modal
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onClose}
-    >
+      onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
           <View style={styles.content}>
-            <Text style={[styles.title, { textAlign: isRTL ? 'right' : 'left' }]}>
+            <Text style={[styles.title, {textAlign: isRTL ? 'right' : 'left'}]}>
               {t.guestMode.loginRequired}
             </Text>
-            <Text style={[styles.message, { textAlign: isRTL ? 'right' : 'left' }]}>
+            <Text
+              style={[styles.message, {textAlign: isRTL ? 'right' : 'left'}]}>
               {t.guestMode.loginRequiredMessage}
             </Text>
-            
+
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={[styles.button, styles.loginButton]}
-                onPress={onLogin}
-              >
-                <Text style={styles.loginButtonText}>
-                  {t.guestMode.login}
-                </Text>
+                onPress={onLogin}>
+                <Text style={styles.loginButtonText}>{t.guestMode.login}</Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity
+
+              {/* <TouchableOpacity
                 style={[styles.button, styles.signupButton]}
-                onPress={onSignup}
-              >
+                onPress={onSignup}>
                 <Text style={styles.signupButtonText}>
                   {t.guestMode.signup}
                 </Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
-            
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={onClose}
-            >
-              <Text style={[styles.cancelButtonText, { textAlign: isRTL ? 'right' : 'left' }]}>
+
+            <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+              <Text
+                style={[
+                  styles.cancelButtonText,
+                  {textAlign: isRTL ? 'right' : 'left'},
+                ]}>
                 {t.common.cancel}
               </Text>
             </TouchableOpacity>
@@ -107,12 +104,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: Colors.black,
+    color: '#000000',
     marginBottom: 12,
   },
   message: {
     fontSize: 16,
-    color: Colors.black,
+    color: '#000000',
     lineHeight: 22,
     marginBottom: 24,
   },
@@ -129,10 +126,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.gold,
   },
   signupButton: {
-    backgroundColor: Colors.black,
+    backgroundColor: '#000000',
   },
   loginButtonText: {
-    color: Colors.white,
+    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
