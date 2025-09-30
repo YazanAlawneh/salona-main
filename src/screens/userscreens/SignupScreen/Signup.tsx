@@ -76,13 +76,14 @@ const SignUpScreen = () => {
 
     // Create full phone number with +962 prefix
     const fullPhoneNumber = `+962${phoneNumber}`;
-    
+    // const fullPhoneNumber = `${phoneNumber}`;
+
     console.log('🔍 DEBUG: Attempting registration with:', {
       name,
       email,
       phoneNumber: fullPhoneNumber,
       passwordLength: password.length,
-      acceptTerms
+      acceptTerms,
     });
 
     try {
@@ -93,20 +94,29 @@ const SignUpScreen = () => {
         password_confirmation: confirmPassword,
         phone_number: fullPhoneNumber, // Use the full phone number
       });
-      
+
       console.log('🔍 DEBUG: Registration result:', result);
-      
+
       if (result.success && result.response) {
-        console.log('🔍 DEBUG: Registration successful, navigating to OTP screen');
+        console.log(
+          '🔍 DEBUG: Registration successful, navigating to OTP screen',
+        );
         console.log('🔍 DEBUG: UUID received:', result.response.uuid);
+        console.log('🔍 DEBUG: UUID received:', result.response);
         navigation.navigate('SignupOTPScreen', {uuid: result.response.uuid});
       } else {
         console.log('🔍 DEBUG: Registration failed:', result.error);
-        Alert.alert(t.signup.error.signupFailed, result.error || 'Unknown error occurred');
+        Alert.alert(
+          t.signup.error.signupFailed,
+          result.error || 'Unknown error occurred',
+        );
       }
     } catch (error) {
       console.error('🔍 DEBUG: Registration error caught:', error);
-      Alert.alert(t.signup.error.signupFailed, 'Registration failed. Please try again.');
+      Alert.alert(
+        t.signup.error.signupFailed,
+        'Registration failed. Please try again.',
+      );
     }
   };
 
@@ -247,7 +257,11 @@ const SignUpScreen = () => {
               </TouchableOpacity>
             </View>
             {passwordError && (
-              <Text style={[styles.errorText, {textAlign: isRTL ? 'right' : 'left'}]}>
+              <Text
+                style={[
+                  styles.errorText,
+                  {textAlign: isRTL ? 'right' : 'left'},
+                ]}>
                 {passwordError}
               </Text>
             )}

@@ -352,7 +352,13 @@ export const salonApi = createApi({
       invalidatesTags: ['Address'],
     }),
     createAppointment: builder.mutation<
-      { success: boolean; id?: number; appointment_id?: number; message?: string; total_amount?: number },
+      {
+        success: boolean;
+        id?: number;
+        appointment_id?: number;
+        message?: string;
+        total_amount?: number;
+      },
       CreateAppointmentRequest
     >({
       query: appointmentData => ({

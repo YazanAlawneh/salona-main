@@ -126,6 +126,9 @@ const ExploreScreen: React.FC = () => {
 
   const getCurrentLocation = async () => {
     try {
+      console.log('🔍 [DEBUG] [ExploreScreen] Starting location fetch...');
+      console.log('🔍 [DEBUG] [ExploreScreen] Google Maps API Key available:', !!GOOGLE_MAPS_API_KEY);
+      
       const response = await fetch(
         `https://www.googleapis.com/geolocation/v1/geolocate?key=${GOOGLE_MAPS_API_KEY}`,
         {
@@ -139,10 +142,12 @@ const ExploreScreen: React.FC = () => {
         },
       );
 
+      console.log('🔍 [DEBUG] [ExploreScreen] Location API response status:', response.status);
       const data = await response.json();
+      console.log('🔍 [DEBUG] [ExploreScreen] Location API response data:', data);
 
       if (data.location) {
-        console.log('Location obtained from Google Geolocation API:', {
+        console.log('✅ [DEBUG] [ExploreScreen] Location obtained from Google Geolocation API:', {
           latitude: data.location.lat,
           longitude: data.location.lng,
           accuracy: data.accuracy,
@@ -151,59 +156,85 @@ const ExploreScreen: React.FC = () => {
         setCurrentLocation(data.location);
         fetchNearbySalons(data.location.lat, data.location.lng);
       } else {
-        console.error('Failed to get location from Google Geolocation API');
+        console.error('❌ [DEBUG] [ExploreScreen] Failed to get location from Google Geolocation API');
+        console.error('❌ [DEBUG] [ExploreScreen] Response data:', data);
       }
     } catch (error) {
-      console.error('Error getting location:', error);
+      console.error('❌ [DEBUG] [ExploreScreen] Error getting location:', error);
     }
   };
 
   const fetchNearbySalons = async (latitude: number, longitude: number) => {
     try {
+      console.log('🔍 [DEBUG] [ExploreScreen] Starting nearby salons fetch...');
+      console.log('🔍 [DEBUG] [ExploreScreen] Coordinates:', { latitude, longitude });
+      
       const token = await AsyncStorage.getItem('token');
+      console.log('🔍 [DEBUG] [ExploreScreen] Token available:', !!token);
 
-      const response = await fetch(
-        `https://bella-glam.com/api/nearby-salons?latitude=${latitude}&longitude=${longitude}&radius=1000000`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      const nearbySalonsUrl = `https://bella-glam.com/api/nearby-salons?latitude=${latitude}&longitude=${longitude}&radius=1000000`;
+      console.log('🔍 [DEBUG] [ExploreScreen] Nearby salons URL:', nearbySalonsUrl);
+
+      const response = await fetch(nearbySalonsUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
 
+      console.log('🔍 [DEBUG] [ExploreScreen] Nearby salons API response status:', response.status);
       const data: NearbySalonsResponse = await response.json();
-      // console.log('Nearby salons response:', data);
+      console.log('🔍 [DEBUG] [ExploreScreen] Nearby salons API response:', data);
 
       if (data.success) {
+        console.log('✅ [DEBUG] [ExploreScreen] Successfully fetched nearby salons:', data.salons.length);
+        console.log('🔍 [DEBUG] [ExploreScreen] Nearby salons data:', data.salons);
+        
         // Get travel times for each salon
+        console.log('🔍 [DEBUG] [ExploreScreen] Starting travel time calculation for', data.salons.length, 'salons...');
         const salonsWithTravelTime = await Promise.all(
-          data.salons.map(async salon => {
+          data.salons.map(async (salon, index) => {
             try {
-              const distanceResponse = await fetch(
-                `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${latitude},${longitude}&destinations=${salon.salon_latitude},${salon.salon_longitude}&mode=driving&key=${GOOGLE_MAPS_API_KEY}`,
-              );
+              console.log(`🔍 [DEBUG] [ExploreScreen] Processing salon ${index + 1}/${data.salons.length}:`, salon.name);
+              console.log(`🔍 [DEBUG] [ExploreScreen] Salon coordinates:`, { 
+                lat: salon.salon_latitude, 
+                lng: salon.salon_longitude 
+              });
+              
+              const distanceMatrixUrl = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${latitude},${longitude}&destinations=${salon.salon_latitude},${salon.salon_longitude}&mode=driving&key=${GOOGLE_MAPS_API_KEY}`;
+              console.log(`🔍 [DEBUG] [ExploreScreen] Distance matrix URL for ${salon.name}:`, distanceMatrixUrl);
+              
+              const distanceResponse = await fetch(distanceMatrixUrl);
+              console.log(`🔍 [DEBUG] [ExploreScreen] Distance matrix response status for ${salon.name}:`, distanceResponse.status);
+              
               const distanceData = await distanceResponse.json();
+              console.log(`🔍 [DEBUG] [ExploreScreen] Distance matrix data for ${salon.name}:`, distanceData);
 
               if (distanceData.rows[0]?.elements[0]?.duration?.text) {
+                const travelTime = distanceData.rows[0].elements[0].duration.text;
+                console.log(`✅ [DEBUG] [ExploreScreen] Travel time for ${salon.name}:`, travelTime);
                 return {
                   ...salon,
-                  travelTime: distanceData.rows[0].elements[0].duration.text,
+                  travelTime: travelTime,
                 };
+              } else {
+                console.log(`⚠️ [DEBUG] [ExploreScreen] No travel time data for ${salon.name}`);
+                return salon;
               }
-              return salon;
             } catch (error) {
-              console.error('Error fetching travel time:', error);
+              console.error(`❌ [DEBUG] [ExploreScreen] Error fetching travel time for ${salon.name}:`, error);
               return salon;
             }
           }),
         );
 
+        console.log('✅ [DEBUG] [ExploreScreen] Final nearby salons with travel time:', salonsWithTravelTime);
         setNearbySalons(salonsWithTravelTime);
       } else {
-        console.error('Failed to fetch nearby salons');
+        console.error('❌ [DEBUG] [ExploreScreen] Failed to fetch nearby salons');
+        console.error('❌ [DEBUG] [ExploreScreen] Response data:', data);
       }
     } catch (error) {
-      console.error('Error fetching nearby salons:', error);
+      console.error('❌ [DEBUG] [ExploreScreen] Error fetching nearby salons:', error);
     }
   };
 
@@ -273,55 +304,83 @@ const ExploreScreen: React.FC = () => {
 
   // Map salons with distance and travel time information
   const mappedSalons = useMemo(() => {
-    console.log('mappedSalons - salonsData:', salonsData);
-    console.log('mappedSalons - salonsData.salons:', salonsData?.salons);
+    console.log('🔍 [DEBUG] [ExploreScreen] Mapping salons...');
+    console.log('🔍 [DEBUG] [ExploreScreen] salonsData:', salonsData);
+    console.log('🔍 [DEBUG] [ExploreScreen] salonsData.salons:', salonsData?.salons);
 
     if (!salonsData?.salons) {
-      console.log('No salons data available');
+      console.log('⚠️ [DEBUG] [ExploreScreen] No salons data available');
       return [];
     }
 
-    console.log('Processing salons:', salonsData.salons.length);
+    console.log('🔍 [DEBUG] [ExploreScreen] Processing salons:', salonsData.salons.length);
+    console.log('🔍 [DEBUG] [ExploreScreen] Available nearby salons:', nearbySalons.length);
 
-    const salonsWithDistance = salonsData.salons.map((salon: Salon) => {
+    const salonsWithDistance = salonsData.salons.map((salon: Salon, index) => {
+      console.log(`🔍 [DEBUG] [ExploreScreen] Processing salon ${index + 1}/${salonsData.salons.length}:`, salon.name, 'ID:', salon.id);
+      
       // Find matching nearby salon to get distance and travel time
       const nearbySalon = nearbySalons.find(ns => ns.id === salon.id);
+      console.log(`🔍 [DEBUG] [ExploreScreen] Found nearby salon match for ${salon.name}:`, !!nearbySalon);
+      
+      if (nearbySalon) {
+        console.log(`🔍 [DEBUG] [ExploreScreen] Nearby salon data for ${salon.name}:`, {
+          distance: nearbySalon.distance,
+          travelTime: nearbySalon.travelTime,
+          coordinates: {
+            lat: nearbySalon.salon_latitude,
+            lng: nearbySalon.salon_longitude
+          }
+        });
+      }
+      
       const distanceText = nearbySalon?.distance
         ? nearbySalon.distance < 1
           ? `${Math.round(nearbySalon.distance * 1000)}m`
           : `${nearbySalon.distance.toFixed(1)} km`
         : undefined;
 
-      console.log('Processing salon:', salon.name, 'ID:', salon.id);
-      console.log('distance:', distanceText);
-      console.log('travelTime:', nearbySalon?.travelTime);
+      console.log(`🔍 [DEBUG] [ExploreScreen] Distance text for ${salon.name}:`, distanceText);
+      console.log(`🔍 [DEBUG] [ExploreScreen] Travel time for ${salon.name}:`, nearbySalon?.travelTime);
 
-      return {
+      const mappedSalon = {
         ...salon,
         distance: distanceText,
         travelTime: nearbySalon?.travelTime,
         distanceValue: nearbySalon?.distance, // Keep the numeric value for sorting
       };
+      
+      console.log(`✅ [DEBUG] [ExploreScreen] Mapped salon ${salon.name}:`, mappedSalon);
+      return mappedSalon;
     });
 
+    console.log('🔍 [DEBUG] [ExploreScreen] Starting sort by distance...');
     // Sort by distance: salons with distance first (closest to furthest), then salons without distance
     const sortedSalons = salonsWithDistance.sort((a, b) => {
+      console.log(`🔍 [DEBUG] [ExploreScreen] Comparing ${a.name} (${a.distanceValue}) vs ${b.name} (${b.distanceValue})`);
+      
       // If both have distance, sort by distance value
       if (a.distanceValue !== undefined && b.distanceValue !== undefined) {
-        return a.distanceValue - b.distanceValue;
+        const result = a.distanceValue - b.distanceValue;
+        console.log(`🔍 [DEBUG] [ExploreScreen] Both have distance, result: ${result}`);
+        return result;
       }
       // If only one has distance, prioritize the one with distance
       if (a.distanceValue !== undefined && b.distanceValue === undefined) {
+        console.log(`🔍 [DEBUG] [ExploreScreen] Only ${a.name} has distance, prioritizing it`);
         return -1;
       }
       if (a.distanceValue === undefined && b.distanceValue !== undefined) {
+        console.log(`🔍 [DEBUG] [ExploreScreen] Only ${b.name} has distance, prioritizing it`);
         return 1;
       }
       // If neither has distance, maintain original order
+      console.log(`🔍 [DEBUG] [ExploreScreen] Neither has distance, maintaining order`);
       return 0;
     });
 
-    console.log('Final mappedSalons:', sortedSalons.length, 'salons');
+    console.log('✅ [DEBUG] [ExploreScreen] Final mappedSalons:', sortedSalons.length, 'salons');
+    console.log('🔍 [DEBUG] [ExploreScreen] Sorted salons order:', sortedSalons.map(s => ({ name: s.name, distance: s.distance, distanceValue: s.distanceValue })));
     return sortedSalons;
   }, [salonsData?.salons, nearbySalons]);
 

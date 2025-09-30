@@ -208,20 +208,23 @@ const HomeScreen: React.FC = () => {
   );
 
   // Nearby salons query - only runs when we have coordinates
-  const {data: nearbySalonsData, isLoading: nearbySalonsLoading} =
-    useGetNearbySalonsQuery(
-      selectedAddress && selectedAddress.latitude && selectedAddress.longitude
-        ? {
-            latitude: selectedAddress.latitude,
-            longitude: selectedAddress.longitude,
-            radius: 20,
-          }
-        : {
-            latitude: 0,
-            longitude: 0,
-            radius: 20,
-          },
-    );
+  const nearbySalonsQueryParams = selectedAddress && selectedAddress.latitude && selectedAddress.longitude
+    ? {
+        latitude: selectedAddress.latitude,
+        longitude: selectedAddress.longitude,
+        radius: 20,
+      }
+    : {
+        latitude: 0,
+        longitude: 0,
+        radius: 20,
+      };
+
+  console.log('🔍 [DEBUG] [HomeScreen] Nearby salons query params:', nearbySalonsQueryParams);
+  console.log('🔍 [DEBUG] [HomeScreen] Selected address:', selectedAddress);
+
+  const {data: nearbySalonsData, isLoading: nearbySalonsLoading, error: nearbySalonsError} =
+    useGetNearbySalonsQuery(nearbySalonsQueryParams);
 
   // Extract data from RTK Query responses
   const packages = packagesData?.packages?.data || [];
@@ -230,7 +233,7 @@ const HomeScreen: React.FC = () => {
   const nearbySalons = nearbySalonsData?.salons || [];
 
   // Debug logging
-  console.log('RTK Query Data:', {
+  console.log('🔍 [DEBUG] [HomeScreen] RTK Query Data:', {
     packagesData,
     packages,
     packagesLoading,
@@ -246,6 +249,7 @@ const HomeScreen: React.FC = () => {
     nearbySalonsData,
     nearbySalons,
     nearbySalonsLoading,
+    nearbySalonsError,
   });
 
   // Loading state - much simpler now
@@ -269,35 +273,98 @@ const HomeScreen: React.FC = () => {
     setHasRequestedLocationPermission(true);
 
     try {
+      console.log('🔍 [DEBUG] [HomeScreen] Requesting location permission...');
+      
       // For Android, request location permission
       if (Platform.OS === 'android') {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         );
+        console.log('🔍 [DEBUG] [HomeScreen] Android permission result:', granted);
+        
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          // Permission granted, get current location using Geolocation
-          const Geolocation = require('@react-native-community/geolocation');
-          Geolocation.getCurrentPosition(
-            position => {
-              setCurrentLocation({
-                lat: position.coords.latitude,
-                lng: position.coords.longitude,
-              });
-              console.log('Location permission granted and location obtained');
-            },
-            error => {
-              console.error('Error getting location:', error);
-            },
-            {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
-          );
+          console.log('✅ [DEBUG] [HomeScreen] Android permission granted, getting location...');
+          await getCurrentLocation();
+        } else {
+          console.log('❌ [DEBUG] [HomeScreen] Android permission denied');
         }
       } else {
-        // For iOS, we'll need to implement iOS-specific location handling
-        // For now, just log that permission was granted
-        console.log('Location permission granted on iOS');
+        // For iOS, request location permission and get location
+        console.log('🔍 [DEBUG] [HomeScreen] iOS platform, getting location...');
+        await getCurrentLocation();
       }
     } catch (error) {
-      console.error('Error getting location after permission:', error);
+      console.error('❌ [DEBUG] [HomeScreen] Error getting location after permission:', error);
+      // Set a fallback location (Amman, Jordan)
+      setCurrentLocation({lat: 31.95, lng: 35.91});
+    }
+  };
+
+  const getCurrentLocation = async () => {
+    try {
+      console.log('🔍 [DEBUG] [HomeScreen] Getting current location...');
+      
+      // Try Google Geolocation API first (more reliable)
+      const response = await fetch(
+        `https://www.googleapis.com/geolocation/v1/geolocate?key=${GOOGLE_MAPS_API_KEY}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            considerIp: true,
+          }),
+        }
+      );
+
+      const data = await response.json();
+      console.log('🔍 [DEBUG] [HomeScreen] Google Geolocation API response:', data);
+
+      if (data.location) {
+        console.log('✅ [DEBUG] [HomeScreen] Location obtained from Google Geolocation API:', {
+          latitude: data.location.lat,
+          longitude: data.location.lng,
+          accuracy: data.accuracy
+        });
+        setCurrentLocation(data.location);
+        return;
+      }
+    } catch (googleError) {
+      console.log('⚠️ [DEBUG] [HomeScreen] Google Geolocation API failed, trying native geolocation:', googleError);
+    }
+
+    // Fallback to native geolocation
+    try {
+      const Geolocation = require('@react-native-community/geolocation');
+      
+      return new Promise<void>((resolve, reject) => {
+        Geolocation.getCurrentPosition(
+          position => {
+            console.log('✅ [DEBUG] [HomeScreen] Location obtained from native geolocation:', {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy
+            });
+            setCurrentLocation({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            });
+            resolve();
+          },
+          error => {
+            console.error('❌ [DEBUG] [HomeScreen] Native geolocation error:', error);
+            // Set fallback location
+            setCurrentLocation({lat: 31.95, lng: 35.91});
+            resolve(); // Don't reject, just use fallback
+          },
+          {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+        );
+      });
+    } catch (nativeError) {
+      console.error('❌ [DEBUG] [HomeScreen] Native geolocation failed:', nativeError);
+      // Set fallback location
+      setCurrentLocation({lat: 31.95, lng: 35.91});
     }
   };
 
@@ -323,7 +390,9 @@ const HomeScreen: React.FC = () => {
   );
 
   const handleCurrentLocationSelect = useCallback(
-    locationData => {
+    async locationData => {
+      console.log('🔍 [DEBUG] [HomeScreen] Current location selected:', locationData);
+      
       if (locationData) {
         // Use the location data passed from the sheet
         const currentLocationAddress = {
@@ -347,8 +416,25 @@ const HomeScreen: React.FC = () => {
         };
         handleAddressSelect(currentLocationAddress);
       } else {
-        // No location available, show message or handle accordingly
-        console.log('No current location available');
+        // No location available, try to get current location
+        console.log('🔍 [DEBUG] [HomeScreen] No current location available, attempting to get location...');
+        try {
+          await getCurrentLocation();
+          // After getting location, try again
+          if (currentLocation) {
+            const currentLocationAddress = {
+              id: 'current-location',
+              description: 'Current Location',
+              latitude: currentLocation.lat,
+              longitude: currentLocation.lng,
+              isPrimary: false,
+              isFavorite: false,
+            };
+            handleAddressSelect(currentLocationAddress);
+          }
+        } catch (error) {
+          console.error('❌ [DEBUG] [HomeScreen] Failed to get current location:', error);
+        }
       }
     },
     [currentLocation, handleAddressSelect],
@@ -417,6 +503,16 @@ const HomeScreen: React.FC = () => {
     });
   }, [navigation]);
 
+  const handleRefreshLocation = useCallback(async () => {
+    console.log('🔍 [DEBUG] [HomeScreen] Manual location refresh requested');
+    try {
+      await getCurrentLocation();
+      console.log('✅ [DEBUG] [HomeScreen] Location refreshed successfully');
+    } catch (error) {
+      console.error('❌ [DEBUG] [HomeScreen] Failed to refresh location:', error);
+    }
+  }, []);
+
   const requestUserPermission = async () => {
     if (Platform.OS === 'ios') {
       const authStatus = await messaging().requestPermission();
@@ -447,23 +543,35 @@ const HomeScreen: React.FC = () => {
     // Check if we should show location permission modal
     const checkLocationPermission = async () => {
       try {
+        console.log('🔍 [DEBUG] [HomeScreen] Checking location permission...');
+        
         // Check if location permission is already granted
         if (Platform.OS === 'ios') {
-          // For iOS, we'll show the modal and let the user decide
-          setShowLocationPermissionModal(true);
+          // For iOS, try to get location directly first
+          console.log('🔍 [DEBUG] [HomeScreen] iOS platform, attempting to get location...');
+          try {
+            await getCurrentLocation();
+          } catch (error) {
+            console.log('⚠️ [DEBUG] [HomeScreen] iOS location failed, showing permission modal');
+            setShowLocationPermissionModal(true);
+          }
         } else {
           // For Android, check current permission status
           const granted = await PermissionsAndroid.check(
             PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           );
-          if (!granted && !hasRequestedLocationPermission) {
+          console.log('🔍 [DEBUG] [HomeScreen] Android permission status:', granted);
+          
+          if (granted) {
+            console.log('✅ [DEBUG] [HomeScreen] Android permission already granted, getting location...');
+            await getCurrentLocation();
+          } else if (!hasRequestedLocationPermission) {
+            console.log('🔍 [DEBUG] [HomeScreen] Android permission not granted, showing modal');
             setShowLocationPermissionModal(true);
           }
-          // Don't automatically get location even if permission is granted
-          // User must explicitly allow through the modal
         }
       } catch (error) {
-        console.error('Error checking location permission:', error);
+        console.error('❌ [DEBUG] [HomeScreen] Error checking location permission:', error);
         // Fallback to showing modal
         setShowLocationPermissionModal(true);
       }
@@ -488,24 +596,38 @@ const HomeScreen: React.FC = () => {
     const handleNoAddresses = async () => {
       if (userAddresses.length === 0 && currentLocation) {
         try {
+          console.log('🔍 [DEBUG] [HomeScreen] No addresses found, creating from current location...');
+          console.log('🔍 [DEBUG] [HomeScreen] Current location:', currentLocation);
+          
           // Get address from coordinates
-          const geocodeResponse = await fetch(
-            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentLocation.lat},${currentLocation.lng}&key=${GOOGLE_MAPS_API_KEY}`,
-          );
+          const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentLocation.lat},${currentLocation.lng}&key=${GOOGLE_MAPS_API_KEY}`;
+          console.log('🔍 [DEBUG] [HomeScreen] Geocoding URL:', geocodeUrl);
+          
+          const geocodeResponse = await fetch(geocodeUrl);
+          console.log('🔍 [DEBUG] [HomeScreen] Geocoding response status:', geocodeResponse.status);
+          
           const geocodeData = await geocodeResponse.json();
+          console.log('🔍 [DEBUG] [HomeScreen] Geocoding response data:', geocodeData);
 
           if (geocodeData.results && geocodeData.results[0]) {
+            const addressDescription = geocodeData.results[0].formatted_address;
+            console.log('✅ [DEBUG] [HomeScreen] Found address:', addressDescription);
+            
             await createAddress({
-              description: geocodeData.results[0].formatted_address,
+              description: addressDescription,
               is_favorite: false,
               latitude: currentLocation.lat.toString(),
               longitude: currentLocation.lng.toString(),
             });
+            console.log('✅ [DEBUG] [HomeScreen] Address created successfully');
+            
             // Refetch addresses to get the new one
             refetchAddresses();
+          } else {
+            console.log('⚠️ [DEBUG] [HomeScreen] No geocoding results found');
           }
         } catch (error) {
-          console.error('Error creating address from current location:', error);
+          console.error('❌ [DEBUG] [HomeScreen] Error creating address from current location:', error);
         }
       }
     };
@@ -515,13 +637,28 @@ const HomeScreen: React.FC = () => {
 
   // Transform nearby salons for display
   const mappedSalons = useMemo(() => {
-    return nearbySalons.map((salon: any): MappedSalon => {
+    console.log('🔍 [DEBUG] [HomeScreen] Mapping nearby salons...');
+    console.log('🔍 [DEBUG] [HomeScreen] Nearby salons to map:', nearbySalons);
+    
+    return nearbySalons.map((salon: any, index): MappedSalon => {
+      console.log(`🔍 [DEBUG] [HomeScreen] Processing salon ${index + 1}/${nearbySalons.length}:`, salon.name);
+      console.log(`🔍 [DEBUG] [HomeScreen] Salon data:`, {
+        id: salon.id,
+        name: salon.name,
+        distance: salon.distance,
+        travelTime: salon.travelTime,
+        image_url: salon.image_url,
+        average_rating: salon.average_rating
+      });
+      
       const distanceText =
         salon.distance < 1
           ? `${Math.round(salon.distance * 1000)}m`
           : `${salon.distance.toFixed(1)} km`;
 
-      return {
+      console.log(`🔍 [DEBUG] [HomeScreen] Distance text for ${salon.name}:`, distanceText);
+
+      const mappedSalon = {
         id: salon.id.toString(),
         title: salon.name,
         image: salon.image_url
@@ -531,6 +668,9 @@ const HomeScreen: React.FC = () => {
         time: salon.travelTime || undefined,
         rating: salon.average_rating || '0.0',
       };
+      
+      console.log(`✅ [DEBUG] [HomeScreen] Mapped salon ${salon.name}:`, mappedSalon);
+      return mappedSalon;
     });
   }, [nearbySalons]);
 
@@ -977,12 +1117,53 @@ const HomeScreen: React.FC = () => {
               </View>
 
               <View style={[styles.sectionSpacing2, {marginTop: 20}]}>
-                <BeautyServicesSection
-                  title={t.home.nearbySalons}
-                  data={mappedSalons.slice(0, 4)}
-                  onItemPress={handleSalonPress}
-                  onViewAllPress={handleViewAllPress}
-                />
+                {nearbySalonsError ? (
+                  // Show error state - don't show "no nearby salons" message
+                  <View style={styles.errorContainer}>
+                    <Icon name="error-outline" size={48} color={Colors.red} />
+                    <Text style={styles.errorTitle}>
+                      {t.home.nearbySalonsError.title}
+                    </Text>
+                    <Text style={styles.errorDescription}>
+                      {t.home.nearbySalonsError.description}
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.viewAllSalonsButton}
+                      onPress={handleViewAllPress}>
+                      <Text style={styles.viewAllSalonsButtonText}>
+                        {t.home.nearbySalonsError.viewAllSalons}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : mappedSalons.length > 0 ? (
+                  // Show nearby salons when data is available
+                  <BeautyServicesSection
+                      title={t.home.nearbySalons}
+                      data={mappedSalons.slice(0, 4)}
+                      onItemPress={handleSalonPress}
+                      onViewAllPress={handleViewAllPress}
+                    />
+                ) : (
+                  // Show "no nearby salons" only when request was successful but no salons found
+                  <View style={styles.noNearbySalonsContainer}>
+                    <View style={styles.noNearbySalonsContent}>
+                      <Icon name="location-off" size={48} color={Colors.gold} />
+                      <Text style={styles.noNearbySalonsTitle}>
+                        {t.home.noNearbySalons.title}
+                      </Text>
+                      <Text style={styles.noNearbySalonsDescription}>
+                        {t.home.noNearbySalons.description}
+                      </Text>
+                      <TouchableOpacity
+                        style={styles.viewAllSalonsButton}
+                        onPress={handleViewAllPress}>
+                        <Text style={styles.viewAllSalonsButtonText}>
+                          {t.home.noNearbySalons.viewAllSalons}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
               </View>
 
               {/* <View style={styles.sectionSpacing2}>

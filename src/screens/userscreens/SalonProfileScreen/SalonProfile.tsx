@@ -39,6 +39,7 @@ import PortfolioGrid from './components/PortfolioGrid ';
 import PackagesList from './components/Packages';
 import ReviewConfirmModal from './components/ReviewConfirmModal';
 import GuestRestrictedModal from '../../../components/GuestRestrictedModal/GuestRestrictedModal';
+import DebugPanel from '../../../components/DebugPanel/DebugPanel';
 
 type SalonProfileRouteProp = RouteProp<
   {
@@ -89,6 +90,7 @@ const SalonProfileScreen = () => {
   const {data: addressData} = useGetUserAddressesQuery();
   const [portfolioModalVisible, setPortfolioModalVisible] = useState(false);
   const [portfolioImage, setPortfolioImage] = useState<string | null>(null);
+  const [debugPanelVisible, setDebugPanelVisible] = useState(false);
 
   const {data: salonData, isLoading} = useGetSalonByIdQuery(salon.id);
   const [toggleFavorite] = useToggleFavoriteSalonMutation();
@@ -653,6 +655,41 @@ const SalonProfileScreen = () => {
           onLogin={handleGuestModalLogin}
           onSignup={handleGuestModalSignup}
         />
+        
+        {/* Debug Panel */}
+        <DebugPanel
+          visible={debugPanelVisible}
+          onClose={() => setDebugPanelVisible(false)}
+          debugInfo={{
+            location: selectedAddress ? {
+              lat: parseFloat(selectedAddress.latitude),
+              lng: parseFloat(selectedAddress.longitude)
+            } : undefined,
+            selectedAddress: selectedAddress,
+            nearbySalons: [], // You can add nearby salons data here if available
+            apiCalls: {
+              locationApi: {
+                status: 'N/A',
+                success: !!selectedAddress
+              },
+              nearbySalonsApi: {
+                status: 'N/A',
+                success: false,
+                salonsCount: 0
+              }
+            },
+            errors: []
+          }}
+        />
+        
+        {/* Debug Button - Only show in development */}
+        {__DEV__ && (
+          <TouchableOpacity
+            style={modalStyles.debugButton}
+            onPress={() => setDebugPanelVisible(true)}>
+            <Text style={modalStyles.debugButtonText}>🔍 Debug</Text>
+          </TouchableOpacity>
+        )}
         {activeTab === 'Services' &&
           Object.values(selectedServices).length > 0 && (
             <View
@@ -900,6 +937,21 @@ const modalStyles = StyleSheet.create({
   stickyContinueButtonText: {
     color: Colors.white,
     fontSize: 16,
+    fontFamily: 'Maitree-Bold',
+  },
+  debugButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    backgroundColor: Colors.gold,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    zIndex: 1000,
+  },
+  debugButtonText: {
+    color: Colors.black,
+    fontSize: 12,
     fontFamily: 'Maitree-Bold',
   },
 });

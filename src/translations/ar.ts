@@ -516,6 +516,16 @@ export const ar = {
     welcome: 'اهلا وسهلا',
     beautyServices: 'صالة بيلا',
     nearbySalons: 'مختارة لَكِ ',
+    noNearbySalons: {
+      title: 'لا توجد صالونات قريبة',
+      description: 'لم نتمكن من العثور على أي صالونات قريبة من موقعك الحالي. استكشف جميع الصالونات المتاحة بدلاً من ذلك.',
+      viewAllSalons: 'عرض جميع الصالونات',
+    },
+    nearbySalonsError: {
+      title: 'تعذر تحميل الصالونات القريبة',
+      description: 'حدث خطأ في تحميل الصالونات القريبة. يمكنك استكشاف جميع الصالونات المتاحة.',
+      viewAllSalons: 'عرض جميع الصالونات',
+    },
     viewAll: 'عرض الكل',
     packages: 'Featured Packages',
     packagesTitle: 'الباقات',

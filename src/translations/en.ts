@@ -573,6 +573,16 @@ export const en = {
     welcome: 'Welcome',
     beautyServices: 'Beauty Services',
     nearbySalons: 'Chosen for you',
+    noNearbySalons: {
+      title: 'No Nearby Salons Found',
+      description: 'We couldn\'t find any salons near your current location. Explore all available salons instead.',
+      viewAllSalons: 'View All Salons',
+    },
+    nearbySalonsError: {
+      title: 'Unable to Load Nearby Salons',
+      description: 'There was an error loading nearby salons. You can still explore all available salons.',
+      viewAllSalons: 'View All Salons',
+    },
     viewAll: 'View All',
     packages: 'Featured Packages',
     packagesTitle: 'Packages',

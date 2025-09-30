@@ -55,6 +55,9 @@ const OurSalonsScreen: React.FC = () => {
 
   const getCurrentLocation = async () => {
     try {
+      console.log('🔍 [DEBUG] Starting location fetch...');
+      console.log('🔍 [DEBUG] Google Maps API Key available:', !!GOOGLE_MAPS_API_KEY);
+      
       const response = await fetch(
         `https://www.googleapis.com/geolocation/v1/geolocate?key=${GOOGLE_MAPS_API_KEY}`,
         {
@@ -68,10 +71,12 @@ const OurSalonsScreen: React.FC = () => {
         }
       );
 
+      console.log('🔍 [DEBUG] Location API response status:', response.status);
       const data = await response.json();
+      console.log('🔍 [DEBUG] Location API response data:', data);
       
       if (data.location) {
-        console.log('Location obtained from Google Geolocation API:', {
+        console.log('✅ [DEBUG] Location obtained from Google Geolocation API:', {
           latitude: data.location.lat,
           longitude: data.location.lng,
           accuracy: data.accuracy
@@ -80,59 +85,85 @@ const OurSalonsScreen: React.FC = () => {
         setCurrentLocation(data.location);
         fetchNearbySalons(data.location.lat, data.location.lng);
       } else {
-        console.error('Failed to get location from Google Geolocation API');
+        console.error('❌ [DEBUG] Failed to get location from Google Geolocation API');
+        console.error('❌ [DEBUG] Response data:', data);
       }
     } catch (error) {
-      console.error('Error getting location:', error);
+      console.error('❌ [DEBUG] Error getting location:', error);
     }
   };
 
   const fetchNearbySalons = async (latitude: number, longitude: number) => {
     try {
-      const token = await AsyncStorage.getItem('token');
+      console.log('🔍 [DEBUG] Starting nearby salons fetch...');
+      console.log('🔍 [DEBUG] Coordinates:', { latitude, longitude });
       
-      const response = await fetch(
-        `https://bella-glam.com/api/nearby-salons?latitude=${latitude}&longitude=${longitude}&radius=1000000`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
+      const token = await AsyncStorage.getItem('token');
+      console.log('🔍 [DEBUG] Token available:', !!token);
+      
+      const nearbySalonsUrl = `https://bella-glam.com/api/nearby-salons?latitude=${latitude}&longitude=${longitude}&radius=1000000`;
+      console.log('🔍 [DEBUG] Nearby salons URL:', nearbySalonsUrl);
+      
+      const response = await fetch(nearbySalonsUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
 
+      console.log('🔍 [DEBUG] Nearby salons API response status:', response.status);
       const data: NearbySalonsResponse = await response.json();
-      // console.log('Nearby salons response:', data);
+      console.log('🔍 [DEBUG] Nearby salons API response:', data);
 
       if (data.success) {
+        console.log('✅ [DEBUG] Successfully fetched nearby salons:', data.salons.length);
+        console.log('🔍 [DEBUG] Nearby salons data:', data.salons);
+        
         // Get travel times for each salon
+        console.log('🔍 [DEBUG] Starting travel time calculation for', data.salons.length, 'salons...');
         const salonsWithTravelTime = await Promise.all(
-          data.salons.map(async (salon) => {
+          data.salons.map(async (salon, index) => {
             try {
-              const distanceResponse = await fetch(
-                `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${latitude},${longitude}&destinations=${salon.salon_latitude},${salon.salon_longitude}&mode=driving&key=${GOOGLE_MAPS_API_KEY}`
-              );
+              console.log(`🔍 [DEBUG] Processing salon ${index + 1}/${data.salons.length}:`, salon.name);
+              console.log(`🔍 [DEBUG] Salon coordinates:`, { 
+                lat: salon.salon_latitude, 
+                lng: salon.salon_longitude 
+              });
+              
+              const distanceMatrixUrl = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${latitude},${longitude}&destinations=${salon.salon_latitude},${salon.salon_longitude}&mode=driving&key=${GOOGLE_MAPS_API_KEY}`;
+              console.log(`🔍 [DEBUG] Distance matrix URL for ${salon.name}:`, distanceMatrixUrl);
+              
+              const distanceResponse = await fetch(distanceMatrixUrl);
+              console.log(`🔍 [DEBUG] Distance matrix response status for ${salon.name}:`, distanceResponse.status);
+              
               const distanceData = await distanceResponse.json();
+              console.log(`🔍 [DEBUG] Distance matrix data for ${salon.name}:`, distanceData);
               
               if (distanceData.rows[0]?.elements[0]?.duration?.text) {
+                const travelTime = distanceData.rows[0].elements[0].duration.text;
+                console.log(`✅ [DEBUG] Travel time for ${salon.name}:`, travelTime);
                 return {
                   ...salon,
-                  travelTime: distanceData.rows[0].elements[0].duration.text
+                  travelTime: travelTime
                 };
+              } else {
+                console.log(`⚠️ [DEBUG] No travel time data for ${salon.name}`);
+                return salon;
               }
-              return salon;
             } catch (error) {
-              console.error('Error fetching travel time:', error);
+              console.error(`❌ [DEBUG] Error fetching travel time for ${salon.name}:`, error);
               return salon;
             }
           })
         );
 
+        console.log('✅ [DEBUG] Final nearby salons with travel time:', salonsWithTravelTime);
         setNearbySalons(salonsWithTravelTime);
       } else {
-        console.error('Failed to fetch nearby salons');
+        console.error('❌ [DEBUG] Failed to fetch nearby salons');
+        console.error('❌ [DEBUG] Response data:', data);
       }
     } catch (error) {
-      console.error('Error fetching nearby salons:', error);
+      console.error('❌ [DEBUG] Error fetching nearby salons:', error);
     }
   };
 
@@ -175,16 +206,40 @@ const OurSalonsScreen: React.FC = () => {
   };
 
   const mappedSalons = useMemo(() => {
-    return salons.map((salon: any) => {
+    console.log('🔍 [DEBUG] Mapping salons...');
+    console.log('🔍 [DEBUG] Total salons to map:', salons.length);
+    console.log('🔍 [DEBUG] Total nearby salons available:', nearbySalons.length);
+    console.log('🔍 [DEBUG] Salons data:', salons);
+    console.log('🔍 [DEBUG] Nearby salons data:', nearbySalons);
+    
+    return salons.map((salon: any, index) => {
+      console.log(`🔍 [DEBUG] Processing salon ${index + 1}/${salons.length}:`, salon.name, 'ID:', salon.id);
+      
       // Find matching nearby salon to get distance and travel time
       const nearbySalon = nearbySalons.find(ns => ns.id === salon.id);
+      console.log(`🔍 [DEBUG] Found nearby salon match for ${salon.name}:`, !!nearbySalon);
+      
+      if (nearbySalon) {
+        console.log(`🔍 [DEBUG] Nearby salon data for ${salon.name}:`, {
+          distance: nearbySalon.distance,
+          travelTime: nearbySalon.travelTime,
+          coordinates: {
+            lat: nearbySalon.salon_latitude,
+            lng: nearbySalon.salon_longitude
+          }
+        });
+      }
+      
       const distanceText = nearbySalon?.distance 
         ? (nearbySalon.distance < 1 
             ? `${Math.round(nearbySalon.distance * 1000)}m` 
             : `${nearbySalon.distance.toFixed(1)} km`)
         : undefined;
 
-      return {
+      console.log(`🔍 [DEBUG] Distance text for ${salon.name}:`, distanceText);
+      console.log(`🔍 [DEBUG] Travel time for ${salon.name}:`, nearbySalon?.travelTime);
+
+      const mappedSalon = {
         id: salon.id.toString(),
         title: salon.name,
         image: salon.image_url 
@@ -194,6 +249,9 @@ const OurSalonsScreen: React.FC = () => {
         time: nearbySalon?.travelTime,
         rating: salon.average_rating || '0.0'
       };
+      
+      console.log(`✅ [DEBUG] Mapped salon ${salon.name}:`, mappedSalon);
+      return mappedSalon;
     });
   }, [salons, nearbySalons]);
 
