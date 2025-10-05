@@ -846,6 +846,7 @@ const HomeScreen: React.FC = () => {
       (navigation as any).navigate('ExploreScreen', {
         filters: {
           categories: [categoryId.toString()],
+          categoryNames: [categoryName],
           initialTab: 'Services',
         },
       });

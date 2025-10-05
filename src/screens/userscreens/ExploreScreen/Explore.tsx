@@ -90,8 +90,9 @@ const ExploreScreen: React.FC = () => {
   }, [route.params?.filters]);
 
   // Combine all query parameters
+  const normalizedSearch = searchQuery.trim();
   const queryParams: SalonQueryParams = {
-    ...(searchQuery && {search: searchQuery}),
+    ...(normalizedSearch && {search: normalizedSearch}),
     // ...(sortBy && { sort_by: sortBy }),
     // ...(priceRange && { price_range: priceRange }),
     ...(rating && {rating}),
@@ -106,14 +107,15 @@ const ExploreScreen: React.FC = () => {
   // Determine if we should fetch by category
   const rawCategoryId = categories && categories.length > 0 ? categories[0] : undefined;
   const isValidCategoryId = typeof rawCategoryId === 'string' && /^\d+$/.test(rawCategoryId);
+  const isSearching = normalizedSearch.length > 0;
 
   // Fetch salons by category when a valid category id is present, otherwise fetch all salons
   const {
     data: categorySalonsData,
     isLoading: isCategoryLoading,
     error: categoryError,
-  } = useGetCategorySalonsQuery(isValidCategoryId ? rawCategoryId : (undefined as unknown as string), {
-    skip: !isValidCategoryId,
+  } = useGetCategorySalonsQuery(isValidCategoryId && !isSearching ? rawCategoryId : (undefined as unknown as string), {
+    skip: !isValidCategoryId || isSearching,
   });
 
   const {
@@ -121,12 +123,13 @@ const ExploreScreen: React.FC = () => {
     isLoading: isAllLoading,
     error: allError,
   } = useGetAllSalonsQuery(queryParams, {
-    skip: !!isValidCategoryId,
+    skip: !!(isValidCategoryId && !isSearching),
   });
 
-  const salonsData = (isValidCategoryId ? categorySalonsData : salonsDataAll) as typeof categorySalonsData;
-  const isLoading = isValidCategoryId ? isCategoryLoading : isAllLoading;
-  const error = isValidCategoryId ? categoryError : allError;
+  const useCategory = isValidCategoryId && !isSearching;
+  const salonsData = (useCategory ? categorySalonsData : salonsDataAll) as typeof categorySalonsData;
+  const isLoading = useCategory ? isCategoryLoading : isAllLoading;
+  const error = useCategory ? categoryError : allError;
 
   // Log API response
   useEffect(() => {
@@ -493,19 +496,24 @@ const ExploreScreen: React.FC = () => {
               onSearchChange={handleSearch}
               onMenuPress={handleMenuPress}
             />
-
-            <Text style={styles.resultCount}>
-              {(() => {
-                const total = salonsData?.salons?.length ?? 0;
-                if (categoryNames && categoryNames.length > 0) {
-                  return `${categoryNames[0]} (${total})`;
-                }
-                if (searchQuery) {
-                  return `Search:  (${total})`;
-                }
-                return `${t.explore.all} (${total})`;
-              })()}
-            </Text>
+            <View style={styles.metaSearchRow}>
+               {categoryNames && categoryNames.length > 0 ? (
+                 <Text style={styles.resultCount}>{categoryNames[0]}</Text>
+               ) : null}
+              <Text style={styles.resultCount}>
+                {(() => {
+                  const total = salonsData?.salons?.length ?? 0;
+                  if (categoryNames && categoryNames.length > 0) {
+                    return ` (${total})`;
+                    // ${categoryNames[0]}
+                  }
+                  if (searchQuery) {
+                    return `Search:  (${total})`;
+                  }
+                  return `${t.explore.all} (${total})`;
+                })()}
+              </Text>
+            </View>
 
             <View
               style={[

@@ -17,6 +17,12 @@ const styles = StyleSheet.create({
     // paddingTop: 10,
     // backgroundColor: Colors.black,
   },
+  metaSearchRow:{
+    flexDirection:'row',
+    justifyContent:'space-between',
+    marginBottom: 10,
+
+  },
   salonMetaRow: {
     flexDirection: 'row',
     gap: 40,
@@ -69,7 +75,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.white,
     fontFamily: 'Maitree-Regular',
-    marginBottom: 10,
+
   },
   filterSortContainer: {
     flexDirection: 'row',
