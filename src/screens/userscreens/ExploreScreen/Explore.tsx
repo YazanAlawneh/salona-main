@@ -380,7 +380,7 @@ const ExploreScreen: React.FC = () => {
       const mappedSalon = {
         ...salon,
         distance: distanceText,
-        travelTime: nearbySalon?.travelTime,
+        travelTime: (salon as any).estimated_arrival_time || nearbySalon?.travelTime,
         distanceValue: hasValidDistance ? numericDistance : undefined, // Keep the numeric value for sorting
       };
 
@@ -616,26 +616,36 @@ const ExploreScreen: React.FC = () => {
                                     {getAverageRating(item).toFixed(1)}
                                   </Text>
                                 </View>
-                                {/* <View style={styles.listCardRating}>
-                                  <Icon
-                                    name="access-time"
-                                    size={16}
-                                    color={Colors.gold}
-                                  />
-                                  <Text style={styles.listCardRatingText}>
-                                    {item.travelTime}
-                                  </Text>
-                                </View>
-                                <View style={styles.listCardRating}>
-                                  <Icon
-                                    name="place"
-                                    size={16}
-                                    color={Colors.gold}
-                                  />
-                                  <Text style={styles.listCardRatingText}>
-                                    {item.distance}
-                                  </Text>
-                                </View> */}
+                                {item.travelTime ? (
+                                  <View style={styles.listCardRating}>
+                                    <Icon
+                                      name="access-time"
+                                      size={16}
+                                      color={Colors.gold}
+                                    />
+                                    <Text
+                                      style={styles.listCardRatingText}
+                                      numberOfLines={1}
+                                    >
+                                      {item.travelTime}
+                                    </Text>
+                                  </View>
+                                ) : null}
+                                {/* {item.distance ? (
+                                  <View style={styles.listCardRating}>
+                                    <Icon
+                                      name="place"
+                                      size={16}
+                                      color={Colors.gold}
+                                    />
+                                    <Text
+                                      style={styles.listCardRatingText}
+                                      numberOfLines={1}
+                                    >
+                                      {item.distance}
+                                    </Text>
+                                  </View>
+                                ) : null} */}
                               </View>
                             </View>
                           </TouchableOpacity>

@@ -685,7 +685,7 @@ const HomeScreen: React.FC = () => {
           ? {uri: salon.image_url}
           : require('../../../assets/images/alia-ahmad.png'),
         distance: distanceText,
-        time: salon.travelTime || undefined,
+        time: salon.estimated_arrival_time || salon.travelTime || undefined,
         rating: salon.average_rating || '0.0',
       };
       
