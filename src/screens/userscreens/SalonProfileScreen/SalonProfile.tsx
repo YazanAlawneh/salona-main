@@ -525,7 +525,7 @@ const SalonProfileScreen = () => {
                        <Text style={modalStyles.continueButtonText}>
                       {t.salonProfile.services.actions.continue}
                     </Text>
-                   
+
                   </TouchableOpacity> */}
                 </View>
               </View>
@@ -655,41 +655,41 @@ const SalonProfileScreen = () => {
           onLogin={handleGuestModalLogin}
           onSignup={handleGuestModalSignup}
         />
-        
+
         {/* Debug Panel */}
-        <DebugPanel
-          visible={debugPanelVisible}
-          onClose={() => setDebugPanelVisible(false)}
-          debugInfo={{
-            location: selectedAddress ? {
-              lat: parseFloat(selectedAddress.latitude),
-              lng: parseFloat(selectedAddress.longitude)
-            } : undefined,
-            selectedAddress: selectedAddress,
-            nearbySalons: [], // You can add nearby salons data here if available
-            apiCalls: {
-              locationApi: {
-                status: 'N/A',
-                success: !!selectedAddress
-              },
-              nearbySalonsApi: {
-                status: 'N/A',
-                success: false,
-                salonsCount: 0
-              }
-            },
-            errors: []
-          }}
-        />
-        
+        {/*<DebugPanel*/}
+        {/*  visible={debugPanelVisible}*/}
+        {/*  onClose={() => setDebugPanelVisible(false)}*/}
+        {/*  debugInfo={{*/}
+        {/*    location: selectedAddress ? {*/}
+        {/*      lat: parseFloat(selectedAddress.latitude),*/}
+        {/*      lng: parseFloat(selectedAddress.longitude)*/}
+        {/*    } : undefined,*/}
+        {/*    selectedAddress: selectedAddress,*/}
+        {/*    nearbySalons: [], // You can add nearby salons data here if available*/}
+        {/*    apiCalls: {*/}
+        {/*      locationApi: {*/}
+        {/*        status: 'N/A',*/}
+        {/*        success: !!selectedAddress*/}
+        {/*      },*/}
+        {/*      nearbySalonsApi: {*/}
+        {/*        status: 'N/A',*/}
+        {/*        success: false,*/}
+        {/*        salonsCount: 0*/}
+        {/*      }*/}
+        {/*    },*/}
+        {/*    errors: []*/}
+        {/*  }}*/}
+        {/*/>*/}
+
         {/* Debug Button - Only show in development */}
-        {__DEV__ && (
-          <TouchableOpacity
-            style={modalStyles.debugButton}
-            onPress={() => setDebugPanelVisible(true)}>
-            <Text style={modalStyles.debugButtonText}>🔍 Debug</Text>
-          </TouchableOpacity>
-        )}
+        {/*development{__DEV__ && (*/}
+        {/*  <TouchableOpacity*/}
+        {/*    style={modalStyles.debugButton}*/}
+        {/*    onPress={() => setDebugPanelVisible(true)}>*/}
+        {/*    <Text style={modalStyles.debugButtonText}>🔍 Debug</Text>*/}
+        {/*  </TouchableOpacity>*/}
+        {/*)}*/}
         {activeTab === 'Services' &&
           Object.values(selectedServices).length > 0 && (
             <View
