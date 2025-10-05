@@ -5,15 +5,15 @@ import {
   Salon,
   SalonResponse,
   CreateServiceRequest,
+  UpdateServiceRequest,
   DeleteServiceRequest,
   CreatePackageRequest,
   UpdatePackageRequest,
   DeletePackageRequest,
-  UpdateAvailabilityRequest,
   GetAvailabilityRequest,
   Category,
   Package,
-  Address,
+  SalonAvailability,
 } from '../../types/salon';
 import {setOnlineStatus} from '../slices/authSlice';
 type CreateAppointmentResponse = {
@@ -59,30 +59,6 @@ const prepareHeaders = async (headers: Headers) => {
   }
 };
 
-export interface TimeSlot {
-  start: string;
-  end: string;
-  available: boolean;
-}
-
-export interface SalonAvailability {
-  day: string;
-  opening_time: string;
-  closing_time: string;
-  periods: TimeSlot[];
-}
-
-export interface UpdateServiceRequest {
-  salonId: number;
-  services: Array<{
-    id: number;
-    service: string;
-    price: number;
-    description: string;
-    time: string;
-  }>;
-}
-
 export interface CreateAppointmentRequest {
   salon_id: number;
   address_id: number;
@@ -90,6 +66,15 @@ export interface CreateAppointmentRequest {
   appointment_time: string;
   note?: string;
   services: number[];
+}
+
+// Local minimal Address shape for API layer
+export interface Address {
+  id: number | string;
+  description: string;
+  latitude: string;
+  longitude: string;
+  is_primary?: number | boolean;
 }
 
 // Add interface for salon query parameters
@@ -116,13 +101,26 @@ export interface UpdateAvailabilityRequest {
   is_open: number;
 }
 
+// Ads types
+export interface AdItem {
+  id: number;
+  title: string;
+  description: string;
+  image: string | null;
+  url: string;
+  is_active: string | number;
+  created_at: string;
+  updated_at: string;
+  image_url: string | null;
+}
+
 export const salonApi = createApi({
   reducerPath: 'salonApi',
   baseQuery: fetchBaseQuery({
     baseUrl: API_BASE_URL,
     prepareHeaders,
   }),
-  tagTypes: ['Salon', 'Appointments', 'Service', 'Address'],
+  tagTypes: ['Salon', 'Appointments', 'Service', 'Address', 'Category', 'Package'],
   endpoints: builder => ({
     getSalonById: builder.query<SalonResponse, number>({
       query: id => `salons/${id}`,
@@ -226,7 +224,7 @@ export const salonApi = createApi({
     }),
     updateAvailability: builder.mutation<
       SalonResponse,
-      UpdateAvailabilityRequest
+      UpdateAvailabilityRequest & {is_open: number}
     >({
       query: ({id, opening_time, closing_time, is_open}) => ({
         url: `salons/1/update-availabilities`,
@@ -496,6 +494,20 @@ export const salonApi = createApi({
       }),
       providesTags: ['Package'],
     }),
+    // Ads endpoint
+    getAds: builder.query<AdItem[], void>({
+      query: () => ({
+        url: 'ads',
+        method: 'GET',
+      }),
+      transformResponse: (response: any) => {
+        // The API returns a plain array; ensure array fallback
+        return Array.isArray(response) ? response : [];
+      },
+      // Cache for a while to avoid refetching frequently
+      keepUnusedDataFor: 60,
+      providesTags: ['Service'],
+    }),
     getAddresses: builder.query<{addresses: Address[]}, void>({
       query: () => ({
         url: 'addresses',
@@ -568,4 +580,5 @@ export const {
   useGetNearbySalonsQuery,
   useCreateAddressMutation,
   useUpdatePrimaryAddressMutation,
+  useGetAdsQuery,
 } = salonApi;

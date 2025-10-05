@@ -36,12 +36,12 @@ import {useTranslation} from '../../../contexts/TranslationContext';
 import {useGuestMode} from '../../../contexts/GuestModeContext';
 import {
   useGetAllSalonsQuery,
-  useGetPackagesQuery,
   useGetCategoriesQuery,
   useGetAddressesQuery,
   useGetNearbySalonsQuery,
   useCreateAddressMutation,
   useUpdatePrimaryAddressMutation,
+  useGetAdsQuery,
 } from '../../../redux/api/salonApi';
 // import {skip} from '@reduxjs/toolkit/query';
 import {Package} from '../../../components/PackagesSection/PackagesSection';
@@ -123,6 +123,10 @@ const mapNearbySalonToSalon = (nearbySalon: NearbySalon): ExtendedSalon => {
     avatar: null,
     address: '',
     bio: '',
+    phone_number: null,
+    type: '',
+    about: '',
+    email_verified_at: null,
     working_hours: [],
     ratings_received: [],
     categories: [],
@@ -132,8 +136,11 @@ const mapNearbySalonToSalon = (nearbySalon: NearbySalon): ExtendedSalon => {
     updated_at: '',
     deleted_at: null,
     is_active: 1,
+    is_online: 1,
+    average_rating: '0',
     is_verified: true,
     verification_code: null,
+    availabilities: [],
   };
 };
 
@@ -184,11 +191,7 @@ const HomeScreen: React.FC = () => {
 
   // RTK Query hooks
   const {data: salonsData, isLoading: salonsLoading} = useGetAllSalonsQuery({});
-  const {
-    data: packagesData,
-    isLoading: packagesLoading,
-    error: packagesError,
-  } = useGetPackagesQuery();
+  const {data: adsData, isLoading: adsLoading, error: adsError} = useGetAdsQuery();
   const {
     data: categoriesData,
     isLoading: categoriesLoading,
@@ -227,17 +230,17 @@ const HomeScreen: React.FC = () => {
     useGetNearbySalonsQuery(nearbySalonsQueryParams);
 
   // Extract data from RTK Query responses
-  const packages = packagesData?.packages?.data || [];
+  const ads = Array.isArray(adsData) ? adsData : [];
   const categories = categoriesData?.categories || [];
   const userAddresses = addressesData?.addresses || [];
   const nearbySalons = nearbySalonsData?.salons || [];
 
   // Debug logging
   console.log('🔍 [DEBUG] [HomeScreen] RTK Query Data:', {
-    packagesData,
-    packages,
-    packagesLoading,
-    packagesError,
+    adsData,
+    ads,
+    adsLoading,
+    adsError,
     categoriesData,
     categories,
     categoriesLoading,
@@ -254,17 +257,17 @@ const HomeScreen: React.FC = () => {
 
   // Loading state - much simpler now
   const isLoadingAny =
-    packagesLoading ||
+    adsLoading ||
     categoriesLoading ||
     addressesLoading ||
     nearbySalonsLoading;
 
   // Additional debugging for rendering
   console.log('Rendering Debug:', {
-    packagesLength: packages.length,
+    adsLength: ads.length,
     categoriesLength: categories.length,
     isLoadingAny,
-    packagesLoading,
+    adsLoading,
     categoriesLoading,
   });
 
@@ -340,7 +343,7 @@ const HomeScreen: React.FC = () => {
       
       return new Promise<void>((resolve, reject) => {
         Geolocation.getCurrentPosition(
-          position => {
+          (position: any) => {
             console.log('✅ [DEBUG] [HomeScreen] Location obtained from native geolocation:', {
               latitude: position.coords.latitude,
               longitude: position.coords.longitude,
@@ -352,7 +355,7 @@ const HomeScreen: React.FC = () => {
             });
             resolve();
           },
-          error => {
+          (error: any) => {
             console.error('❌ [DEBUG] [HomeScreen] Native geolocation error:', error);
             // Set fallback location
             setCurrentLocation({lat: 31.95, lng: 35.91});
@@ -376,11 +379,11 @@ const HomeScreen: React.FC = () => {
 
   // Handle address selection
   const handleAddressSelect = useCallback(
-    async address => {
+    async (address: any) => {
       dispatch(setSelectedAddress(address));
       setIsAddressModalVisible(false);
       try {
-        await updatePrimaryAddress(address.id);
+        await updatePrimaryAddress(Number(address.id));
         console.log('Address selected and set as primary');
       } catch (error) {
         console.error('Error updating primary address:', error);
@@ -390,7 +393,7 @@ const HomeScreen: React.FC = () => {
   );
 
   const handleCurrentLocationSelect = useCallback(
-    async locationData => {
+    async (locationData: any) => {
       console.log('🔍 [DEBUG] [HomeScreen] Current location selected:', locationData);
       
       if (locationData) {
@@ -409,8 +412,8 @@ const HomeScreen: React.FC = () => {
         const currentLocationAddress = {
           id: 'current-location',
           description: 'Current Location',
-          latitude: currentLocation.lat,
-          longitude: currentLocation.lng,
+          latitude: (currentLocation as {lat: number; lng: number}).lat,
+          longitude: (currentLocation as {lat: number; lng: number}).lng,
           isPrimary: false,
           isFavorite: false,
         };
@@ -425,8 +428,8 @@ const HomeScreen: React.FC = () => {
             const currentLocationAddress = {
               id: 'current-location',
               description: 'Current Location',
-              latitude: currentLocation.lat,
-              longitude: currentLocation.lng,
+              latitude: (currentLocation as {lat: number; lng: number}).lat,
+              longitude: (currentLocation as {lat: number; lng: number}).lng,
               isPrimary: false,
               isFavorite: false,
             };
@@ -446,7 +449,7 @@ const HomeScreen: React.FC = () => {
   }, [navigation]);
 
   const handleGoFilter = useCallback(() => {
-    navigation.navigate('FilterScreen');
+    (navigation as any).navigate('FilterScreen');
   }, [navigation]);
 
   const handleSearch = useCallback((text: string) => {
@@ -455,9 +458,9 @@ const HomeScreen: React.FC = () => {
 
   const handleSearchSubmit = useCallback(() => {
     if (searchQuery.trim()) {
-      navigation.navigate('ExploreScreen', {
+    (navigation as any).navigate('ExploreScreen', {
         filters: {
-          search: searchQuery.trim(),
+          // Narrow type expects only categories here; Explore handles search from SearchBar
           categories: [],
         },
       });
@@ -479,11 +482,17 @@ const HomeScreen: React.FC = () => {
 
   const handlePackagePress = useCallback(
     (packageItem: Package) => {
-      const salon = packageItem.salon || {
-        id: packageItem.salon_id,
-        name: packageItem.salon_name,
-        image_url: packageItem.salon_image,
-      };
+      const salon = packageItem.salon
+        ? {
+            id: packageItem.salon.id,
+            name: packageItem.salon.name,
+            image: packageItem.salon.image_url || '',
+          }
+        : {
+            id: packageItem.salon_id,
+            name: packageItem.salon_name,
+            image: packageItem.salon_image || '',
+          };
       console.log('package:');
       console.log(packageItem);
 
@@ -675,136 +684,55 @@ const HomeScreen: React.FC = () => {
   }, [nearbySalons]);
 
   console.log('Loading states:', {
-    packagesLoading,
+    adsLoading,
     categoriesLoading,
     addressesLoading,
     nearbySalonsLoading,
     isLoadingAny,
   });
 
-  // src/constants/images.js
-  const itemImages = [
-    require('../../../assets/images/br1.jpg'),
-    require('../../../assets/images/br2.jpg'),
-    require('../../../assets/images/br3.jpg'),
-  ];
-  const getImageForPackage = (id: number): any => {
-    const index = id % itemImages.length;
-    return itemImages[index];
-  };
-
-  // Loading skeleton for packages
-  const PackageSkeleton = () => (
-    <View style={styles.packageContainer}>
-      <View style={styles.packageCard}>
-        <View style={styles.packageImageContainer}>
-          <View style={styles.skeletonImage} />
-          <View style={styles.packageContent}>
-            <View style={styles.skeletonTitle} />
-            <View style={styles.skeletonPrice} />
-            <View style={styles.skeletonDetails} />
-          </View>
-        </View>
-      </View>
-    </View>
-  );
-
-  const packageImagesRef = useRef<Record<number, any>>({});
-
-  useEffect(() => {
-    const map: Record<number, any> = {};
-    packages.forEach((pkg, index) => {
-      map[pkg.id] = itemImages[index % itemImages.length];
-    });
-    packageImagesRef.current = map;
-  }, [packages]);
-  // Memoized PackageItem component for better performance
-  const PackageItem = React.memo(({package: pkg}: {package: Package}) => {
-    const image = useMemo(() => getImageForPackage(pkg.id), [pkg.id]);
-
-    const handlePress = useCallback(() => {
-      handlePackagePress(pkg);
-    }, [pkg, handlePackagePress]);
-
-    const handleImageError = useCallback(() => {
-      console.log('Image failed to load for package:', pkg.id);
-    }, [pkg.id]);
-
+  // Ads section rendering
+  const renderAdItem = ({item}: {item: any}) => {
+    const imageSource = item.image_url
+      ? {uri: item.image_url}
+      : require('../../../assets/images/prettyLogo.png');
+    const handlePress = () => {
+      if (item.url) {
+        try {
+          // open URL if needed later
+        } catch (e) {
+          console.log('Failed to open ad url');
+        }
+      }
+    };
     return (
-      <View style={[styles.packageContainer]}>
+      <View style={styles.packageContainer}>
         <View style={styles.packageCard}>
           <View style={styles.packageImageContainer}>
-            <Image
-              source={image}
-              style={styles.packageImage}
-              resizeMode="cover"
-              fadeDuration={300}
-              onError={handleImageError}
-              progressiveRenderingEnabled={true}
-            />
-
-            {/* Gradient Overlay */}
+            <Image source={imageSource} style={styles.packageImage} resizeMode="cover" />
             <View style={styles.packageGradient} />
-
-            {/* Discount Badge - Removed OFF and Price Labels */}
-            {/* {pkg.discount_percentage > 0 && ( */}
-            {/* <View style={styles.badgesContainer}>
-              <View style={styles.discountBadge}>
-                <Text style={styles.discountText}>
-                  {pkg.discount_percentage}% OFF
-                </Text>
-              </View>
-              <View style={styles.packagePrice}>
-                <Text style={styles.priceText}>
-                  {pkg.amount} {t.home.currency}
-                </Text>
-              </View>
-            </View> */}
-            {/* )} */}
-
-            {/* Content */}
             <View style={styles.packageContent}>
               <View style={styles.packageHeader}>
                 <Text style={styles.packageTitle} numberOfLines={2}>
-                  {pkg.name}
+                  {item.title || ''}
                 </Text>
               </View>
-
-              <View style={styles.packageDetails}>
-                <View style={styles.detailItem}>
-                  <Icon name="time-outline" size={14} color={Colors.black} />
-                  <Text style={styles.detailText}>
-                    {pkg.time} {t.home.min}
-                  </Text>
-                </View>
-
-                {pkg.description && (
+              {item.description ? (
+                <View style={styles.packageDetails}>
                   <View style={styles.detailItem}>
-                    <Icon
-                      name="information-circle-outline"
-                      size={14}
-                      color={Colors.black}
-                    />
+                    <Icon name="information-circle-outline" size={14} color={Colors.black} />
                     <Text style={styles.detailText} numberOfLines={1}>
-                      {pkg.description}
+                      {item.description}
                     </Text>
                   </View>
-                )}
-              </View>
-
-              {/* Action Button - Hidden */}
-              {/* <View style={styles.packageAction}>
-                <View style={styles.actionButton}>
-                  <Text style={styles.actionText}>{t.home.viewDetails}</Text>
-                  <Icon name="chevron-forward" size={16} color={Colors.black} />
                 </View>
-              </View> */}
+              ) : null}
             </View>
           </View>
         </View>
       </View>
     );
-  });
+  };
 
   const SearchBar = useCallback(() => {
     console.log(
@@ -855,7 +783,7 @@ const HomeScreen: React.FC = () => {
         {addressesLoading ? (
           <ActivityIndicator size="large" color={Colors.gold} />
         ) : (
-          <DeliveryLocationSheet
+            <DeliveryLocationSheet
             currenctLocation={
               currentLocation
                 ? {
@@ -866,11 +794,11 @@ const HomeScreen: React.FC = () => {
                   }
                 : null
             }
-            selectedAddress={selectedAddress}
+              selectedAddress={selectedAddress as any}
             handleSelected={handleAddressSelect}
             setCurrentLocation={handleCurrentLocationSelect}
             addNewAddress={handleAddNewAddress}
-            addresses={userAddresses}
+              addresses={userAddresses as any}
           />
         )}
       </BottomSheetModal>
@@ -906,10 +834,9 @@ const HomeScreen: React.FC = () => {
 
   const handleCategoryPress = useCallback(
     (categoryId: number, categoryName: string) => {
-      navigation.navigate('ExploreScreen', {
+      (navigation as any).navigate('ExploreScreen', {
         filters: {
           categories: [categoryId.toString()],
-          categoryNames: [categoryName],
           initialTab: 'Services',
         },
       });
@@ -1007,11 +934,23 @@ const HomeScreen: React.FC = () => {
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.horizontalScrollContent}> */}
-                {packagesLoading ? (
+                {adsLoading ? (
                   <FlatList
                     data={[1, 2, 3]} // Show 3 skeleton items
                     keyExtractor={item => `skeleton-${item}`}
-                    renderItem={() => <PackageSkeleton />}
+                    renderItem={() => (
+                      <View style={styles.packageContainer}>
+                        <View style={styles.packageCard}>
+                          <View style={styles.packageImageContainer}>
+                            <View style={styles.skeletonImage} />
+                            <View style={styles.packageContent}>
+                              <View style={styles.skeletonTitle} />
+                              <View style={styles.skeletonDetails} />
+                            </View>
+                          </View>
+                        </View>
+                      </View>
+                    )}
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     removeClippedSubviews={true}
@@ -1024,12 +963,12 @@ const HomeScreen: React.FC = () => {
                       index,
                     })}
                   />
-                ) : packages.length > 0 ? (
+                ) : ads.length > 0 ? (
                   <FlatList
-                    data={packages}
+                    data={ads}
                     contentContainerStyle={{paddingHorizontal: 4}}
-                    keyExtractor={item => `package-${item.id}`}
-                    renderItem={({item}) => <PackageItem package={item} />}
+                    keyExtractor={item => `ad-${item.id}`}
+                    renderItem={renderAdItem}
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     removeClippedSubviews={true}
@@ -1075,9 +1014,7 @@ const HomeScreen: React.FC = () => {
                   //     index,
                   //   })}
                   // />
-                  <Text style={styles.serviceTitle}>
-                    {t.home.noCategoriesAvailable}
-                  </Text>
+                  <Text style={styles.serviceTitle}>{t.home.noCategoriesAvailable}</Text>
                 )}
                 {/* </ScrollView> */}
               </View>
@@ -1097,10 +1034,10 @@ const HomeScreen: React.FC = () => {
                         onPress={() =>
                           handleCategoryPress(category.id, category.name)
                         }>
-                        <Image
+                    <Image
                           source={
-                            category.image_url
-                              ? {uri: category.image_url}
+                            (category as any).image_url
+                              ? {uri: (category as any).image_url}
                               : require('../../../assets/images/prettyLogo.png')
                           }
                           style={styles.serviceImage}
