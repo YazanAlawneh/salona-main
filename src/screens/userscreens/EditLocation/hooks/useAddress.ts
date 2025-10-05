@@ -1,18 +1,23 @@
-import { useState, useEffect } from 'react';
-import { Alert } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../../../redux/store';
-import { addAddress, deleteAddress, updateAddress, setUser } from '../../../../redux/slices/authSlice';
-import { Address } from '../types';
-import { useToggleFavoriteAddressMutation } from '../../../../redux/api/salonApi';
-import { useTranslation } from '../../../../contexts/TranslationContext';
+import {useState, useEffect} from 'react';
+import {Alert} from 'react-native';
+import {useDispatch, useSelector} from 'react-redux';
+import {RootState} from '../../../../redux/store';
+import {
+  addAddress,
+  deleteAddress,
+  updateAddress,
+  setUser,
+} from '../../../../redux/slices/authSlice';
+import {Address} from '../types';
+import {useToggleFavoriteAddressMutation} from '../../../../redux/api/salonApi';
+import {useTranslation} from '../../../../contexts/TranslationContext';
 export const useAddress = () => {
   const [loading, setLoading] = useState(false);
   const [fetchingAddresses, setFetchingAddresses] = useState(false);
   const dispatch = useDispatch();
-  const { user, token } = useSelector((state: RootState) => state.auth);
+  const {user, token} = useSelector((state: RootState) => state.auth);
   const [toggleFavorite] = useToggleFavoriteAddressMutation();
-  const { t } = useTranslation();
+  const {t} = useTranslation();
   // Add token logging
   useEffect(() => {
     if (token) {
@@ -31,16 +36,20 @@ export const useAddress = () => {
 
     try {
       setFetchingAddresses(true);
-      const response = await fetch('https://bella-glam.com/api/addresses', {
+      const url = 'https://bella-glam.com/api/addresses';
+      console.log('Fetching addresses from URL:', url);
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+          // Note: no 'Content-Type' on GET to avoid 400 from some backends
         },
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.log('Addresses API error body:', errorText);
         throw new Error(`Failed to fetch addresses: ${response.status}`);
       }
 
@@ -65,7 +74,7 @@ export const useAddress = () => {
       }
     } catch (error) {
       console.error('Error fetching addresses:', error);
-      Alert.alert(t.editLocation.error.addressAdded);
+      // Avoid user-facing alert here to prevent noisy dialogs when opening map
     } finally {
       setFetchingAddresses(false);
     }
@@ -81,15 +90,24 @@ export const useAddress = () => {
     description: string,
     locationLink: string,
     latitude: number,
-    longitude: number
+    longitude: number,
   ): Promise<number | null> => {
     try {
       console.log('Starting to add address...');
       console.log('Using token:', token ? 'Token exists' : 'No token found');
-      
-      if (!token) {
-        throw new Error('Authentication token is missing. Please log in again.');
+      const userId = (user as any)?.id;
+
+      if (!token || !userId) {
+        Alert.alert(
+          'Login required',
+          'Please log in to add and save addresses.'
+        );
+        return null;
       }
+
+      // if (!token) {
+      //   throw new Error('Authentication token is missing. Please log in again.');
+      // }
 
       setLoading(true);
 
@@ -97,17 +115,19 @@ export const useAddress = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
         },
         body: JSON.stringify({
+          user_id: userId,
           description,
+          location_link: locationLink,
           is_favorite: false,
           latitude: latitude.toString(),
           longitude: longitude.toString(),
         }),
       });
-
+console.log('URL:', "'https://bella-glam.com/api/new-address'");
       console.log('Response status:', response.status);
       console.log('Response headers:', response.headers);
 
@@ -118,7 +138,9 @@ export const useAddress = () => {
         if (response.status === 401) {
           throw new Error('Authentication failed. Please log in again.');
         }
-        throw new Error(`Failed to add address: ${response.status} ${responseText}`);
+        throw new Error(
+          `Failed to add address: ${response.status} ${responseText}`,
+        );
       }
 
       let data;
@@ -141,19 +163,19 @@ export const useAddress = () => {
         isFavorite: false,
         isPrimary: false,
         latitude,
-        longitude
+        longitude,
       };
 
       dispatch(addAddress(newAddress));
       // Alert.alert(t.editLocation.addressAdded);
-      
+
       // Refresh the addresses list after adding a new one
       await fetchUserAddresses();
-      
+
       return data.address.id;
     } catch (error) {
       console.error('Error in handleAddAddress:', error);
-      Alert.alert(t.editLocation.error.addressAdded);
+      Alert.alert('Failed to add address', 'Please try again.');
       return null;
     } finally {
       setLoading(false);
@@ -172,7 +194,7 @@ export const useAddress = () => {
       [
         {
           text: 'Cancel',
-          style: 'cancel'
+          style: 'cancel',
         },
         {
           text: 'Delete',
@@ -180,14 +202,17 @@ export const useAddress = () => {
           onPress: async () => {
             try {
               setLoading(true);
-              const response = await fetch(`https://bella-glam.com/api/addresses/${addressId}`, {
-                method: 'DELETE',
-                headers: {
-                  'Authorization': `Bearer ${token}`,
-                  'Accept': 'application/json',
-                  'Content-Type': 'application/json',
+              const response = await fetch(
+                `https://bella-glam.com/api/addresses/${addressId}`,
+                {
+                  method: 'DELETE',
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                  },
                 },
-              });
+              );
 
               if (!response.ok) {
                 throw new Error(`Failed to delete address: ${response.status}`);
@@ -201,9 +226,9 @@ export const useAddress = () => {
             } finally {
               setLoading(false);
             }
-          }
-        }
-      ]
+          },
+        },
+      ],
     );
   };
 
@@ -215,18 +240,22 @@ export const useAddress = () => {
 
     try {
       setLoading(true);
-      const address = user?.addresses?.find(addr => addr.id === addressId);
+      const addresses: Address[] = ((user as any)?.addresses ?? []) as Address[];
+      const address = addresses.find(a => a.id === addressId);
       if (!address) {
-        throw new Error('Address not found'); 
+        throw new Error('Address not found');
       }
 
-      const response = await fetch(`https://bella-glam.com/api/update-address/${addressId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
+      const response = await fetch(
+        `https://bella-glam.com/api/update-address/${addressId}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to update favorite status: ${response.status}`);
@@ -235,7 +264,7 @@ export const useAddress = () => {
       const data = await response.json();
       console.log('Toggle favorite response:', data);
 
-      dispatch(updateAddress({ id: addressId, isFavorite: !address.isFavorite }));
+      dispatch(updateAddress({id: addressId, isFavorite: !address.isFavorite}));
       Alert.alert(t.editLocation.FavUpdated);
     } catch (error) {
       console.error('Error toggling favorite:', error);
@@ -253,7 +282,7 @@ export const useAddress = () => {
 
     try {
       setLoading(true);
-      dispatch(updateAddress({ id: addressId, isPrimary: true }));
+      dispatch(updateAddress({id: addressId, isPrimary: true}));
     } catch (error) {
       Alert.alert(t.editLocation.error.addressAdded);
     } finally {
@@ -268,6 +297,6 @@ export const useAddress = () => {
     handleDeleteAddress,
     handleToggleFavorite,
     handleSetPrimary,
-    fetchUserAddresses
+    fetchUserAddresses,
   };
-}; 
+};

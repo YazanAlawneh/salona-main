@@ -1,14 +1,14 @@
 {
   "project_info": {
-    "project_number": "218571464302",
-    "firebase_url": "https://spa1-46f3d-default-rtdb.firebaseio.com",
-    "project_id": "spa1-46f3d",
-    "storage_bucket": "spa1-46f3d.firebasestorage.app"
+    "project_number": "920478385073",
+    "firebase_url": "https://bella-firebase-default-rtdb.firebaseio.com",
+    "project_id": "bella-firebase",
+    "storage_bucket": "bella-firebase.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:218571464302:android:424de7737ddf871b61907f",
+        "mobilesdk_app_id": "1:920478385073:android:967cb15d1e1cefc5e8b390",
         "android_client_info": {
           "package_name": "com.salonatspa"
         }
@@ -16,26 +16,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCnIelu-yQhWZ-CraXgyrFNAxNkaA4Rm8U"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:218571464302:android:dee8b758dc29332061907f",
-        "android_client_info": {
-          "package_name": "com.spa"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyCnIelu-yQhWZ-CraXgyrFNAxNkaA4Rm8U"
+          "current_key": "AIzaSyAVuO3csN-VudJ53pap4CyRv_WbT2IINXs"
         }
       ],
       "services": {

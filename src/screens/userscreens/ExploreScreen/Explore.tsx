@@ -334,10 +334,23 @@ const ExploreScreen: React.FC = () => {
         });
       }
       
-      const distanceText = nearbySalon?.distance
-        ? nearbySalon.distance < 1
-          ? `${Math.round(nearbySalon.distance * 1000)}m`
-          : `${nearbySalon.distance.toFixed(1)} km`
+      // Normalize distance value to a number if possible
+      const rawDistance = nearbySalon?.distance as unknown;
+      const numericDistance =
+        typeof rawDistance === 'number'
+          ? rawDistance
+          : typeof rawDistance === 'string'
+            ? parseFloat(rawDistance)
+            : undefined;
+
+      // Safely format distance text with guards for undefined/NaN/negative values
+      const hasValidDistance =
+        typeof numericDistance === 'number' && isFinite(numericDistance) && numericDistance >= 0;
+
+      const distanceText = hasValidDistance
+        ? numericDistance < 1
+          ? `${Math.max(0, Math.round(numericDistance * 1000))}m`
+          : `${numericDistance.toFixed(1)} km`
         : undefined;
 
       console.log(`🔍 [DEBUG] [ExploreScreen] Distance text for ${salon.name}:`, distanceText);
@@ -347,7 +360,7 @@ const ExploreScreen: React.FC = () => {
         ...salon,
         distance: distanceText,
         travelTime: nearbySalon?.travelTime,
-        distanceValue: nearbySalon?.distance, // Keep the numeric value for sorting
+        distanceValue: hasValidDistance ? numericDistance : undefined, // Keep the numeric value for sorting
       };
       
       console.log(`✅ [DEBUG] [ExploreScreen] Mapped salon ${salon.name}:`, mappedSalon);

@@ -212,10 +212,22 @@ const DeliveryLocationSheet = ({
   return (
     <FlatList
       data={addresses}
-      keyExtractor={item => item.id}
+      keyExtractor={item => item.id?.toString?.() ?? String(item.id)}
       renderItem={renderItem}
       ListHeaderComponent={
-        <Text style={styles.header}>{t.home.savedLocations}</Text>
+        <>
+          <Text style={styles.header}>{t.home.savedLocations}</Text>
+          {(() => {
+            console.log('🧭 [DEBUG] DeliveryLocationSheet render:', {
+              selectedAddress,
+              addressesCount: addresses?.length || 0,
+            });
+            if (Array.isArray(addresses)) {
+              console.log('🧭 [DEBUG] addresses sample:', addresses.slice(0, 3));
+            }
+            return null;
+          })()}
+        </>
       }
       ListFooterComponent={renderFooter}
       contentContainerStyle={styles.listContent}

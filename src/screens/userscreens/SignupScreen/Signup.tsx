@@ -12,7 +12,7 @@ import {
 import styles from './Signup.styles';
 import Colors from '../../../constants/Colors';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import CountryPicker from 'react-native-country-picker-modal';
+// import CountryPicker from 'react-native-country-picker-modal';
 import useRegister from '../../../hooks/useRegister';
 import {useNavigation} from '@react-navigation/native';
 import {useTranslation} from '../../../contexts/TranslationContext';
@@ -195,7 +195,7 @@ const SignUpScreen = () => {
             </Text>
             <View
               style={[styles.phoneInputRow, isRTL && styles.phoneInputRowRtl]}>
-              <CountryPicker
+              {/* <CountryPicker
                 countryCode="JO"
                 withFlag
                 withCallingCode
@@ -209,7 +209,7 @@ const SignUpScreen = () => {
                   onBackgroundTextColor: Colors.customBlack,
                 }}
                 containerButtonStyle={styles.flagIcon}
-              />
+              /> */}
               <Text style={styles.phonePrefix}>+962</Text>
               <TextInput
                 style={[

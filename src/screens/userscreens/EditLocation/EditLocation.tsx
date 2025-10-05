@@ -22,6 +22,7 @@ import {useLocation} from './hooks/useLocation';
 import {useAddress} from './hooks/useAddress';
 import {useTranslation} from '../../../contexts/TranslationContext';
 import {useUpdateAddressMutation} from '../../../redux/api/salonApi';
+import { setSelectedAddress } from '../../../redux/slices/salonSlice';
 import {useNavigation} from '@react-navigation/native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Location, Address} from './types';
@@ -132,6 +133,10 @@ const EditLocationScreen: React.FC = () => {
     if (!selectedLocation) {
       console.log('No location selected');
       Alert.alert(t.editLocation.errors.noLocation);
+      return;
+    }
+    if (!token || !user?.id) {
+      Alert.alert('Login required', 'Please log in to save addresses.');
       return;
     }
 
@@ -284,6 +289,22 @@ const EditLocationScreen: React.FC = () => {
           description: newDescription.trim(),
         }),
       );
+
+      // Set as selected address for app-wide usage and return to previous screen
+      dispatch(
+        setSelectedAddress({
+          id: editingAddress.id,
+          description: newDescription.trim(),
+          locationLink: editingAddress.locationLink,
+          isFavorite: editingAddress.isFavorite,
+          isPrimary: true,
+          latitude: editingAddress.latitude,
+          longitude: editingAddress.longitude,
+          isCurrentLocation: false,
+        })
+      );
+
+      navigation.goBack();
 
       setEditModalVisible(false);
       setEditingAddress(null);
