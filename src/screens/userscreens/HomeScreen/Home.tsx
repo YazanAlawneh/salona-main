@@ -15,6 +15,7 @@ import {
   StatusBar,
   Pressable,
   Touchable,
+  Linking,
 } from 'react-native';
 // import Icon from 'react-native-vector-icons/MaterialIcons';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -696,17 +697,25 @@ const HomeScreen: React.FC = () => {
     const imageSource = item.image_url
       ? {uri: item.image_url}
       : require('../../../assets/images/prettyLogo.png');
-    const handlePress = () => {
-      if (item.url) {
-        try {
-          // open URL if needed later
-        } catch (e) {
-          console.log('Failed to open ad url');
+    const handlePress = async () => {
+      try {
+        const rawUrl = (item?.url || '').trim();
+        if (!rawUrl) {
+          return;
         }
+        const normalizedUrl = /^https?:\/\//i.test(rawUrl)
+          ? rawUrl
+          : `https://${rawUrl}`;
+        const supported = await Linking.canOpenURL(normalizedUrl);
+        if (supported) {
+          await Linking.openURL(normalizedUrl);
+        }
+      } catch (e) {
+        console.log('Failed to open ad url', e);
       }
     };
     return (
-      <View style={styles.packageContainer}>
+      <TouchableOpacity style={styles.packageContainer} activeOpacity={0.85} onPress={handlePress}>
         <View style={styles.packageCard}>
           <View style={styles.packageImageContainer}>
             <Image source={imageSource} style={styles.packageImage} resizeMode="cover" />
@@ -730,7 +739,7 @@ const HomeScreen: React.FC = () => {
             </View>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
