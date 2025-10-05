@@ -133,11 +133,30 @@ export const salonApi = createApi({
     }),
     getAllSalons: builder.query<SalonResponse, SalonQueryParams>({
       query: (params = {}) => ({
-        url: 'salons',
+        url: '/salons',
         params: {
           ...params,
         },
       }),
+    }),
+    // Get salons by category id
+    getCategorySalons: builder.query<SalonResponse, number | string>({
+      query: (categoryId) => ({
+        url: `category/${categoryId}/salons`,
+        method: 'GET',
+      }),
+      transformResponse: (response: any) => {
+        // Normalize to SalonResponse shape
+        if (Array.isArray(response?.salons)) {
+          return { salons: response.salons } as SalonResponse;
+        }
+        // Some endpoints might return the array directly
+        if (Array.isArray(response)) {
+          return { salons: response } as SalonResponse;
+        }
+        return { salons: [] } as SalonResponse;
+      },
+      providesTags: ['Salon'],
     }),
     createService: builder.mutation<
       {services: Service[]},
@@ -581,4 +600,5 @@ export const {
   useCreateAddressMutation,
   useUpdatePrimaryAddressMutation,
   useGetAdsQuery,
+  useGetCategorySalonsQuery,
 } = salonApi;

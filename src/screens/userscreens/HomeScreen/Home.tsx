@@ -89,7 +89,7 @@ type RootStackParamList = {
     initialTab?: string;
   };
   NotificationsScreen: undefined;
-  ExploreScreen: {filters: {categories: string[]}};
+  ExploreScreen: {filters: {categories?: string[]; categoryNames?: string[]; initialTab?: string; search?: string}};
   EditLocationScreen: undefined;
 };
 

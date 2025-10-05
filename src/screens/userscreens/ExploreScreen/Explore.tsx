@@ -16,7 +16,7 @@ import styles from './Explore.styles';
 import Colors from '../../../constants/Colors';
 import SearchBarWithMenu from '../../../components/SearchBarWithMenu/SearchBarWithMenu';
 import {useNavigation, useRoute} from '@react-navigation/native';
-import {useGetAllSalonsQuery} from '../../../redux/api/salonApi';
+import {useGetAllSalonsQuery, useGetCategorySalonsQuery} from '../../../redux/api/salonApi';
 import {Salon} from '../../../types/salon';
 import Footer from '../../../components/Footer/Footer';
 import {SalonQueryParams} from '../../../redux/api/salonApi';
@@ -103,12 +103,30 @@ const ExploreScreen: React.FC = () => {
   console.log('Category Names state:', categoryNames);
   console.log('Search Query state:', searchQuery);
 
-  // Use the combined parameters in the API call
+  // Determine if we should fetch by category
+  const rawCategoryId = categories && categories.length > 0 ? categories[0] : undefined;
+  const isValidCategoryId = typeof rawCategoryId === 'string' && /^\d+$/.test(rawCategoryId);
+
+  // Fetch salons by category when a valid category id is present, otherwise fetch all salons
   const {
-    data: salonsData,
-    isLoading,
-    error,
-  } = useGetAllSalonsQuery(queryParams);
+    data: categorySalonsData,
+    isLoading: isCategoryLoading,
+    error: categoryError,
+  } = useGetCategorySalonsQuery(isValidCategoryId ? rawCategoryId : (undefined as unknown as string), {
+    skip: !isValidCategoryId,
+  });
+
+  const {
+    data: salonsDataAll,
+    isLoading: isAllLoading,
+    error: allError,
+  } = useGetAllSalonsQuery(queryParams, {
+    skip: !!isValidCategoryId,
+  });
+
+  const salonsData = (isValidCategoryId ? categorySalonsData : salonsDataAll) as typeof categorySalonsData;
+  const isLoading = isValidCategoryId ? isCategoryLoading : isAllLoading;
+  const error = isValidCategoryId ? categoryError : allError;
 
   // Log API response
   useEffect(() => {
@@ -128,7 +146,7 @@ const ExploreScreen: React.FC = () => {
     try {
       console.log('🔍 [DEBUG] [ExploreScreen] Starting location fetch...');
       console.log('🔍 [DEBUG] [ExploreScreen] Google Maps API Key available:', !!GOOGLE_MAPS_API_KEY);
-      
+
       const response = await fetch(
         `https://www.googleapis.com/geolocation/v1/geolocate?key=${GOOGLE_MAPS_API_KEY}`,
         {
@@ -168,7 +186,7 @@ const ExploreScreen: React.FC = () => {
     try {
       console.log('🔍 [DEBUG] [ExploreScreen] Starting nearby salons fetch...');
       console.log('🔍 [DEBUG] [ExploreScreen] Coordinates:', { latitude, longitude });
-      
+
       const token = await AsyncStorage.getItem('token');
       console.log('🔍 [DEBUG] [ExploreScreen] Token available:', !!token);
 
@@ -188,24 +206,24 @@ const ExploreScreen: React.FC = () => {
       if (data.success) {
         console.log('✅ [DEBUG] [ExploreScreen] Successfully fetched nearby salons:', data.salons.length);
         console.log('🔍 [DEBUG] [ExploreScreen] Nearby salons data:', data.salons);
-        
+
         // Get travel times for each salon
         console.log('🔍 [DEBUG] [ExploreScreen] Starting travel time calculation for', data.salons.length, 'salons...');
         const salonsWithTravelTime = await Promise.all(
           data.salons.map(async (salon, index) => {
             try {
               console.log(`🔍 [DEBUG] [ExploreScreen] Processing salon ${index + 1}/${data.salons.length}:`, salon.name);
-              console.log(`🔍 [DEBUG] [ExploreScreen] Salon coordinates:`, { 
-                lat: salon.salon_latitude, 
-                lng: salon.salon_longitude 
+              console.log(`🔍 [DEBUG] [ExploreScreen] Salon coordinates:`, {
+                lat: salon.salon_latitude,
+                lng: salon.salon_longitude
               });
-              
+
               const distanceMatrixUrl = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${latitude},${longitude}&destinations=${salon.salon_latitude},${salon.salon_longitude}&mode=driving&key=${GOOGLE_MAPS_API_KEY}`;
               console.log(`🔍 [DEBUG] [ExploreScreen] Distance matrix URL for ${salon.name}:`, distanceMatrixUrl);
-              
+
               const distanceResponse = await fetch(distanceMatrixUrl);
               console.log(`🔍 [DEBUG] [ExploreScreen] Distance matrix response status for ${salon.name}:`, distanceResponse.status);
-              
+
               const distanceData = await distanceResponse.json();
               console.log(`🔍 [DEBUG] [ExploreScreen] Distance matrix data for ${salon.name}:`, distanceData);
 
@@ -318,11 +336,11 @@ const ExploreScreen: React.FC = () => {
 
     const salonsWithDistance = salonsData.salons.map((salon: Salon, index) => {
       console.log(`🔍 [DEBUG] [ExploreScreen] Processing salon ${index + 1}/${salonsData.salons.length}:`, salon.name, 'ID:', salon.id);
-      
+
       // Find matching nearby salon to get distance and travel time
       const nearbySalon = nearbySalons.find(ns => ns.id === salon.id);
       console.log(`🔍 [DEBUG] [ExploreScreen] Found nearby salon match for ${salon.name}:`, !!nearbySalon);
-      
+
       if (nearbySalon) {
         console.log(`🔍 [DEBUG] [ExploreScreen] Nearby salon data for ${salon.name}:`, {
           distance: nearbySalon.distance,
@@ -333,7 +351,7 @@ const ExploreScreen: React.FC = () => {
           }
         });
       }
-      
+
       // Normalize distance value to a number if possible
       const rawDistance = nearbySalon?.distance as unknown;
       const numericDistance =
@@ -362,7 +380,7 @@ const ExploreScreen: React.FC = () => {
         travelTime: nearbySalon?.travelTime,
         distanceValue: hasValidDistance ? numericDistance : undefined, // Keep the numeric value for sorting
       };
-      
+
       console.log(`✅ [DEBUG] [ExploreScreen] Mapped salon ${salon.name}:`, mappedSalon);
       return mappedSalon;
     });
@@ -371,7 +389,7 @@ const ExploreScreen: React.FC = () => {
     // Sort by distance: salons with distance first (closest to furthest), then salons without distance
     const sortedSalons = salonsWithDistance.sort((a, b) => {
       console.log(`🔍 [DEBUG] [ExploreScreen] Comparing ${a.name} (${a.distanceValue}) vs ${b.name} (${b.distanceValue})`);
-      
+
       // If both have distance, sort by distance value
       if (a.distanceValue !== undefined && b.distanceValue !== undefined) {
         const result = a.distanceValue - b.distanceValue;
@@ -477,11 +495,16 @@ const ExploreScreen: React.FC = () => {
             />
 
             <Text style={styles.resultCount}>
-              {categoryNames && categoryNames.length > 0
-                ? categoryNames[0]
-                : searchQuery
-                ? `Search: ${searchQuery}`
-                : t.explore.all}
+              {(() => {
+                const total = salonsData?.salons?.length ?? 0;
+                if (categoryNames && categoryNames.length > 0) {
+                  return `${categoryNames[0]} (${total})`;
+                }
+                if (searchQuery) {
+                  return `Search:  (${total})`;
+                }
+                return `${t.explore.all} (${total})`;
+              })()}
             </Text>
 
             <View
