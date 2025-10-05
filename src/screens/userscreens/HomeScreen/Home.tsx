@@ -661,10 +661,20 @@ const HomeScreen: React.FC = () => {
         average_rating: salon.average_rating
       });
       
-      const distanceText =
-        salon.distance < 1
-          ? `${Math.round(salon.distance * 1000)}m`
-          : `${salon.distance.toFixed(1)} km`;
+      // Normalize and safely format distance
+      const rawDistance = salon.distance as unknown;
+      const numericDistance =
+        typeof rawDistance === 'number'
+          ? rawDistance
+          : typeof rawDistance === 'string'
+            ? parseFloat(rawDistance)
+            : NaN;
+      const hasValidDistance = Number.isFinite(numericDistance) && numericDistance >= 0;
+      const distanceText = hasValidDistance
+        ? numericDistance < 1
+          ? `${Math.max(0, Math.round(numericDistance * 1000))}m`
+          : `${numericDistance.toFixed(1)} km`
+        : undefined;
 
       console.log(`🔍 [DEBUG] [HomeScreen] Distance text for ${salon.name}:`, distanceText);
 
