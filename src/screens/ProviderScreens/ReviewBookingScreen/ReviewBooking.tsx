@@ -13,44 +13,48 @@ import {
   Platform,
   StatusBar,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import Colors from '../../../constants/Colors';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import CancelAppointmentModal from '../../../components/CancelAppointmentModal/CancelAppointmentModal';
 import SuccessModal from '../../../components/SuccessModal/SuccessModal';
 import ProviderFooter from '../../../components/ProviderFooter/ProviderFooter';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { ProviderStackParamList } from '../../../types/types';
-import { Address } from '../../../screens/userscreens/EditLocation/types';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {ProviderStackParamList} from '../../../types/types';
+import {Address} from '../../../screens/userscreens/EditLocation/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Geolocation from '@react-native-community/geolocation';
-import { useTranslation } from '../../../contexts/TranslationContext';
-import { format } from 'date-fns';
-import { arSA } from 'date-fns/locale';
+import {useTranslation} from '../../../contexts/TranslationContext';
+import {format} from 'date-fns';
+import {arSA} from 'date-fns/locale';
 
-type Props = NativeStackScreenProps<ProviderStackParamList, 'ProviderReviewBookingScreen'>;
+type Props = NativeStackScreenProps<
+  ProviderStackParamList,
+  'ProviderReviewBookingScreen'
+>;
 
-const ProviderReviewBookingScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { bookingDetails , isCompleted } = route.params;
+const ProviderReviewBookingScreen: React.FC<Props> = ({route, navigation}) => {
+  const {bookingDetails, isCompleted} = route.params;
   const [address, setAddress] = useState<Address | null>(null);
   const [loadingAddress, setLoadingAddress] = useState(false);
   const [addressError, setAddressError] = useState<string | null>(null);
   const [appointmentData, setAppointmentData] = useState<any>(null);
   const [loadingAppointment, setLoadingAppointment] = useState(false);
   const [appointmentError, setAppointmentError] = useState<string | null>(null);
-  const { t, isRTL } = useTranslation();
+  const {t, isRTL} = useTranslation();
   const [isCancelled, setIsCancelled] = useState(false);
 
   const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
   const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
 
-  const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
+  const [locationPermissionGranted, setLocationPermissionGranted] =
+    useState(false);
 
   // Function to handle phone call
   const handlePhoneCall = () => {
     if (appointmentData?.user?.phone_number) {
       const phoneNumber = appointmentData.user.phone_number;
-      
+
       // Use a more reliable approach for making phone calls
       if (Platform.OS === 'android') {
         // For Android, use the tel: scheme directly
@@ -58,7 +62,7 @@ const ProviderReviewBookingScreen: React.FC<Props> = ({ route, navigation }) => 
           console.error('Error opening phone call:', err);
           Alert.alert(
             t.reviewBooking.phone.errorTitle,
-            t.reviewBooking.phone.errorMessage
+            t.reviewBooking.phone.errorMessage,
           );
         });
       } else {
@@ -67,7 +71,7 @@ const ProviderReviewBookingScreen: React.FC<Props> = ({ route, navigation }) => 
           console.error('Error opening phone call:', err);
           Alert.alert(
             t.reviewBooking.phone.errorTitle,
-            t.reviewBooking.phone.errorMessage
+            t.reviewBooking.phone.errorMessage,
           );
         });
       }
@@ -82,18 +86,20 @@ const ProviderReviewBookingScreen: React.FC<Props> = ({ route, navigation }) => 
     if (typeof bookingDetails === 'object' && bookingDetails !== null) {
       console.log('✅ Using appointment data from route params');
       setAppointmentData(bookingDetails);
-      
+
       // Check if the booking is cancelled
       if ((bookingDetails as any).status === 'cancelled') {
         setIsCancelled(true);
       }
-      
+
       // Set address directly from bookingDetails
-      if ((bookingDetails as any).address ) { 
+      if ((bookingDetails as any).address) {
         setAddress((bookingDetails as any).address);
       } else {
         console.log('ℹ️ No address found in booking details');
-        setAddressError('No address information available for this appointment.');
+        setAddressError(
+          'No address information available for this appointment.',
+        );
       }
     } else if (typeof bookingDetails === 'number') {
       // Fallback to fetching appointment by ID if only ID is provided
@@ -110,8 +116,11 @@ const ProviderReviewBookingScreen: React.FC<Props> = ({ route, navigation }) => 
     try {
       setLoadingAppointment(true);
       setAppointmentError(null);
-      console.log('🔄 Starting appointment fetch for booking ID:', appointmentId);
-      
+      console.log(
+        '🔄 Starting appointment fetch for booking ID:',
+        appointmentId,
+      );
+
       // Get the token from AsyncStorage
       const token = await AsyncStorage.getItem('token');
       if (!token) {
@@ -121,44 +130,59 @@ const ProviderReviewBookingScreen: React.FC<Props> = ({ route, navigation }) => 
 
       // Fetch the appointment details
       console.log('🔄 Fetching appointment details from API...');
-      const appointmentResponse = await fetch(`https://spa.dev2.prodevr.com/api/appointments/${appointmentId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+      const appointmentResponse = await fetch(
+        `https://bella-glam.com/api/appointments/${appointmentId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
         },
-      });
+      );
 
       if (!appointmentResponse.ok) {
         if (appointmentResponse.status === 404) {
-          console.log('⚠️ Appointment not found (404). This might be a new appointment or the ID is incorrect.');
-          setAppointmentError('Appointment not found. This might be a new appointment or the ID is incorrect.');
+          console.log(
+            '⚠️ Appointment not found (404). This might be a new appointment or the ID is incorrect.',
+          );
+          setAppointmentError(
+            'Appointment not found. This might be a new appointment or the ID is incorrect.',
+          );
           setLoadingAppointment(false);
           return;
         }
-        throw new Error(`Failed to fetch appointment: ${appointmentResponse.status}`);
+        throw new Error(
+          `Failed to fetch appointment: ${appointmentResponse.status}`,
+        );
       }
 
       const data = await appointmentResponse.json();
       console.log('📥 Appointment data received:', data);
       setAppointmentData(data.appointment);
-      
+
       // Check if the booking is cancelled
       if (data.appointment && data.appointment.status === 'cancelled') {
         setIsCancelled(true);
       }
-      
+
       console.log('✅ Appointment data set in state');
-      
+
       // Set address directly from the appointment data
       if (data.appointment && data.appointment.address) {
         setAddress(data.appointment.address);
       } else {
         console.log('ℹ️ No address found in appointment data');
-        setAddressError('No address information available for this appointment.');
+        setAddressError(
+          'No address information available for this appointment.',
+        );
       }
     } catch (error) {
       console.error('❌ Error fetching appointment details:', error);
-      setAppointmentError(error instanceof Error ? error.message : 'Failed to fetch appointment details');
+      setAppointmentError(
+        error instanceof Error
+          ? error.message
+          : 'Failed to fetch appointment details',
+      );
     } finally {
       setLoadingAppointment(false);
       console.log('🏁 Appointment fetch process completed');
@@ -184,25 +208,28 @@ const ProviderReviewBookingScreen: React.FC<Props> = ({ route, navigation }) => 
       const requestData = {
         appointment_id: appointmentData?.id,
         cancel_reason: reason.trim(),
-        status: "cancelled"
+        status: 'cancelled',
       };
 
-      const response = await fetch('https://spa.dev2.prodevr.com/api/update-appointment-status', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
+      const response = await fetch(
+        'https://bella-glam.com/api/update-appointment-status',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify(requestData),
         },
-        body: JSON.stringify(requestData)
-      });
+      );
 
       const data = await response.json();
 
       if (data.success) {
         setIsCancelModalVisible(false);
         // Navigate to Booking screen with initialTab set to 'cancelled'
-        navigation.navigate('ProviderBookingScreen', { initialTab: 'cancelled' });
+        navigation.navigate('ProviderBookingScreen', {initialTab: 'cancelled'});
       } else {
         Alert.alert(t.reviewBooking.errors.cancelAppointment);
       }
@@ -216,17 +243,25 @@ const ProviderReviewBookingScreen: React.FC<Props> = ({ route, navigation }) => 
     setIsSuccessModalVisible(false);
     console.log('Navigate to Home Page');
   };
-  
+
   // Format date and time from the appointment data
   let formattedDateTime = '';
   if (appointmentData?.appointment_day && appointmentData?.appointment_time) {
     const dateTimeString = `${appointmentData.appointment_day}T${appointmentData.appointment_time}`;
     try {
       const dateObj = new Date(dateTimeString);
-      const formattedDate = format(dateObj, 'MMMM d, yyyy', { locale: isRTL ? arSA : undefined });
-      const dayName = format(dateObj, 'EEEE', { locale: isRTL ? arSA : undefined });
-      const formattedHour = format(dateObj, 'hh:mm a', { locale: isRTL ? arSA : undefined });
-      formattedDateTime = `${formattedDate} (${dayName}) ${isRTL ? 'في' : 'at'} ${formattedHour}`;
+      const formattedDate = format(dateObj, 'MMMM d, yyyy', {
+        locale: isRTL ? arSA : undefined,
+      });
+      const dayName = format(dateObj, 'EEEE', {
+        locale: isRTL ? arSA : undefined,
+      });
+      const formattedHour = format(dateObj, 'hh:mm a', {
+        locale: isRTL ? arSA : undefined,
+      });
+      formattedDateTime = `${formattedDate} (${dayName}) ${
+        isRTL ? 'في' : 'at'
+      } ${formattedHour}`;
     } catch (e) {
       formattedDateTime = `${appointmentData.appointment_day} at ${appointmentData.appointment_time}`;
     }
@@ -234,9 +269,11 @@ const ProviderReviewBookingScreen: React.FC<Props> = ({ route, navigation }) => 
 
   // Calculate total amount including service fee
   const calculateTotalAmount = () => {
-    const servicesTotal = appointmentData?.services?.reduce((sum: number, service: any) => 
-      sum + parseFloat(service.price), 0
-    ) || 0;
+    const servicesTotal =
+      appointmentData?.services?.reduce(
+        (sum: number, service: any) => sum + parseFloat(service.price),
+        0,
+      ) || 0;
     const serviceFee = parseFloat(appointmentData?.salon?.service_fee || '0');
     return (servicesTotal + serviceFee).toFixed(2);
   };
@@ -244,43 +281,46 @@ const ProviderReviewBookingScreen: React.FC<Props> = ({ route, navigation }) => 
   const handleCheckoutPress = async () => {
     try {
       console.log('Checkout pressed - updating status to completed');
-      
+
       // Get the token from AsyncStorage
       const token = await AsyncStorage.getItem('token');
       if (!token) {
         Alert.alert(t.reviewBooking.errors.authentication);
         return;
       }
-      
+
       // Prepare the request body
       const requestBody = {
         appointment_id: appointmentData.id,
-        status: "completed",
-        cancel_reason: "no cancellation"
+        status: 'completed',
+        cancel_reason: 'no cancellation',
       };
-      
+
       console.log('Sending request to update appointment status:', requestBody);
       console.log('Using token:', token.substring(0, 10) + '...');
-      
+
       // Make the API call
-      const response = await fetch('https://spa.dev2.prodevr.com/api/update-appointment-status', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+      const response = await fetch(
+        'https://bella-glam.com/api/update-appointment-status',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(requestBody),
         },
-        body: JSON.stringify(requestBody)
-      });
-      
+      );
+
       // Log the response status and headers for debugging
       console.log('Response status:', response.status);
       console.log('Response headers:', JSON.stringify(response.headers));
-      
+
       // Check if the response is JSON
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
         const data = await response.json();
-        
+
         if (response.ok) {
           console.log('Appointment status updated successfully:', data);
           Alert.alert(t.reviewBooking.success.completed);
@@ -311,14 +351,17 @@ const ProviderReviewBookingScreen: React.FC<Props> = ({ route, navigation }) => 
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           {
-            title: "Location Permission",
-            message: "This app needs access to your location to show directions to the customer.",
-            buttonNeutral: "Ask Me Later",
-            buttonNegative: "Cancel",
-            buttonPositive: "OK"
-          }
+            title: 'Location Permission',
+            message:
+              'This app needs access to your location to show directions to the customer.',
+            buttonNeutral: 'Ask Me Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          },
         );
-        setLocationPermissionGranted(granted === PermissionsAndroid.RESULTS.GRANTED);
+        setLocationPermissionGranted(
+          granted === PermissionsAndroid.RESULTS.GRANTED,
+        );
       }
     } catch (err) {
       console.error('Error requesting location permission:', err);
@@ -326,8 +369,7 @@ const ProviderReviewBookingScreen: React.FC<Props> = ({ route, navigation }) => 
   };
 
   useEffect(() => {
-console.log('user appointment name', appointmentData?.user?.name);
-
+    console.log('user appointment name', appointmentData?.user?.name);
   }, []);
 
   // Function to open Google Maps with directions
@@ -341,11 +383,13 @@ console.log('user appointment name', appointmentData?.user?.name);
     if (!locationPermissionGranted) {
       console.log('🔄 Requesting location permission...');
       await requestLocationPermission();
-      
+
       // If permission was denied, directly show the customer's location
       if (!locationPermissionGranted) {
-        console.log('⚠️ Location permission denied, showing customer location only');
-        const { latitude, longitude } = address;
+        console.log(
+          '⚠️ Location permission denied, showing customer location only',
+        );
+        const {latitude, longitude} = address;
         const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
         Linking.openURL(url).catch(err => {
           console.error('Error opening maps:', err);
@@ -356,36 +400,38 @@ console.log('user appointment name', appointmentData?.user?.name);
 
     // Get provider's current location
     console.log('🔄 Getting provider location for directions...');
-    
+
     // Set a timeout for the location request
     const locationTimeout = setTimeout(() => {
-      console.log('⚠️ Location request timed out, opening maps without directions');
+      console.log(
+        '⚠️ Location request timed out, opening maps without directions',
+      );
       // Fallback to just showing the customer's location
-      const { latitude, longitude } = address;
+      const {latitude, longitude} = address;
       const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
       Linking.openURL(url).catch(err => {
         console.error('Error opening maps:', err);
       });
     }, 10000); // 10 second timeout
-    
+
     // Check if location services are enabled
     Geolocation.getCurrentPosition(
-      async (position) => {
+      async position => {
         clearTimeout(locationTimeout);
         console.log('✅ Provider location obtained:', position);
-        
+
         const providerLat = position.coords.latitude;
         const providerLng = position.coords.longitude;
         const customerLat = address.latitude;
         const customerLng = address.longitude;
-        
+
         console.log('📍 Provider location:', providerLat, providerLng);
         console.log('📍 Customer location:', customerLat, customerLng);
-        
+
         // Open Google Maps with directions
         const url = `https://www.google.com/maps/dir/?api=1&origin=${providerLat},${providerLng}&destination=${customerLat},${customerLng}&travelmode=driving`;
         console.log('🗺️ Opening Google Maps with URL:', url);
-        
+
         try {
           await Linking.openURL(url);
           console.log('✅ Google Maps opened successfully');
@@ -398,15 +444,15 @@ console.log('user appointment name', appointmentData?.user?.name);
           });
         }
       },
-      (error) => {
+      error => {
         clearTimeout(locationTimeout);
         console.error('❌ Error getting provider location:', error);
-        
+
         // Directly show the customer's location without showing an alert
-        const { latitude, longitude } = address;
+        const {latitude, longitude} = address;
         const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
         console.log('⚠️ Falling back to showing customer location only:', url);
-        
+
         Linking.openURL(url).catch(err => {
           console.error('Error opening fallback maps URL:', err);
         });
@@ -415,7 +461,7 @@ console.log('user appointment name', appointmentData?.user?.name);
         enableHighAccuracy: true,
         timeout: 8000, // 8 second timeout
         maximumAge: 10000, // Accept positions up to 10 seconds old
-      }
+      },
     );
   };
 
@@ -427,36 +473,28 @@ console.log('user appointment name', appointmentData?.user?.name);
           {isRTL ? (
             <>
               <View style={styles.spacer} />
-              <Text style={styles.headerTitle}>
-                {t.reviewBooking.title}
-              </Text>
-                             <TouchableOpacity 
-                 style={styles.backButton}
-                 onPress={() => navigation.goBack()}
-               >
+              <Text style={styles.headerTitle}>{t.reviewBooking.title}</Text>
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => navigation.goBack()}>
                 <Icon name="arrow-forward" size={24} color={Colors.white} />
               </TouchableOpacity>
             </>
           ) : (
             <>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.backButton}
-                onPress={() => navigation.goBack()}
-              >
+                onPress={() => navigation.goBack()}>
                 <Icon name="arrow-back" size={24} color={Colors.white} />
               </TouchableOpacity>
-              <Text style={styles.headerTitle}>
-                {t.reviewBooking.title}
-              </Text>
+              <Text style={styles.headerTitle}>{t.reviewBooking.title}</Text>
               <View style={styles.spacer} />
             </>
           )}
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.white} />
-          <Text style={styles.loadingText}>
-            {t.reviewBooking.loading}
-          </Text>
+          <Text style={styles.loadingText}>{t.reviewBooking.loading}</Text>
         </View>
         <ProviderFooter />
       </SafeAreaView>
@@ -471,40 +509,31 @@ console.log('user appointment name', appointmentData?.user?.name);
           {isRTL ? (
             <>
               <View style={styles.spacer} />
-              <Text style={styles.headerTitle}>
-                {t.reviewBooking.title}
-              </Text>
-              <TouchableOpacity 
+              <Text style={styles.headerTitle}>{t.reviewBooking.title}</Text>
+              <TouchableOpacity
                 style={styles.backButton}
-                onPress={() => navigation.goBack()}
-              >
+                onPress={() => navigation.goBack()}>
                 <Icon name="arrow-forward" size={24} color={Colors.white} />
               </TouchableOpacity>
             </>
           ) : (
             <>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.backButton}
-                onPress={() => navigation.goBack()}
-              >
+                onPress={() => navigation.goBack()}>
                 <Icon name="arrow-back" size={24} color={Colors.white} />
               </TouchableOpacity>
-              <Text style={styles.headerTitle}>
-                {t.reviewBooking.title}
-              </Text>
+              <Text style={styles.headerTitle}>{t.reviewBooking.title}</Text>
               <View style={styles.spacer} />
             </>
           )}
         </View>
-          <View style={styles.errorContainer}>
+        <View style={styles.errorContainer}>
           <Icon name="error-outline" size={48} color={Colors.red} />
-          <Text style={styles.errorText}>
-            {t.reviewBooking.error}
-          </Text>
-          <TouchableOpacity 
-            style={styles.retryButton} 
-            onPress={() => navigation.goBack()}
-          >
+          <Text style={styles.errorText}>{t.reviewBooking.error}</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => navigation.goBack()}>
             <Text style={styles.retryButtonText}>
               {t.reviewBooking.actions.back}
             </Text>
@@ -515,39 +544,32 @@ console.log('user appointment name', appointmentData?.user?.name);
     );
   }
 
-    return (
-     
-     <SafeAreaView style={styles.container} edges={['top']}>
-       <StatusBar barStyle="light-content" backgroundColor={Colors.black} />
-       <View style={styles.header}>
-         {isRTL ? (
-           <>
-             <View style={styles.spacer} />
-             <Text style={styles.headerTitle}>
-               {t.reviewBooking.title}
-             </Text>
-             <TouchableOpacity 
-               style={styles.backButton}
-               onPress={() => navigation.goBack()}
-             >
-               <Icon name="arrow-forward" size={24} color={Colors.white} />
-             </TouchableOpacity>
-           </>
-         ) : (
-           <>
-             <TouchableOpacity 
-               style={styles.backButton}
-               onPress={() => navigation.goBack()}
-             >
-               <Icon name="arrow-back" size={24} color={Colors.white} />
-             </TouchableOpacity>
-             <Text style={styles.headerTitle}>
-               {t.reviewBooking.title}
-             </Text>
-             <View style={styles.spacer} />
-           </>
-         )}
-       </View>
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.black} />
+      <View style={styles.header}>
+        {isRTL ? (
+          <>
+            <View style={styles.spacer} />
+            <Text style={styles.headerTitle}>{t.reviewBooking.title}</Text>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}>
+              <Icon name="arrow-forward" size={24} color={Colors.white} />
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}>
+              <Icon name="arrow-back" size={24} color={Colors.white} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>{t.reviewBooking.title}</Text>
+            <View style={styles.spacer} />
+          </>
+        )}
+      </View>
 
       <ScrollView style={styles.content}>
         <View style={styles.bookingCard}>
@@ -560,14 +582,18 @@ console.log('user appointment name', appointmentData?.user?.name);
               {appointmentData?.user?.name || t.reviewBooking.customerInfo.name}
             </Text>
             <Text style={styles.serviceCount}>
-              {`${t.reviewBooking.customerInfo.services} ${appointmentData?.services?.length || '0'}`}
+              {`${t.reviewBooking.customerInfo.services} ${
+                appointmentData?.services?.length || '0'
+              }`}
             </Text>
             <Text style={styles.price}>
-              {`${t.reviewBooking.customerInfo.price} ${appointmentData?.total_amount || '0'}`}
+              {`${t.reviewBooking.customerInfo.price} ${
+                appointmentData?.total_amount || '0'
+              }`}
             </Text>
             <Text style={styles.time}>{formattedDateTime}</Text>
             <Text>
-              {appointmentData?.user?.phone_number 
+              {appointmentData?.user?.phone_number
                 ? `${t.reviewBooking.customerInfo.phone} ${appointmentData.user.phone_number}`
                 : t.reviewBooking.customerInfo.noPhone}
             </Text>
@@ -580,9 +606,7 @@ console.log('user appointment name', appointmentData?.user?.name);
           </Text>
           {appointmentData?.services?.map((service: any, index: number) => (
             <View key={index} style={styles.serviceRow}>
-              <Text style={styles.serviceName}>
-                {service.service}
-              </Text>
+              <Text style={styles.serviceName}>{service.service}</Text>
               <Text style={styles.servicePrice}>
                 {`${t.reviewBooking.customerInfo.price} ${service.price}`}
               </Text>
@@ -593,7 +617,9 @@ console.log('user appointment name', appointmentData?.user?.name);
               {t.reviewBooking.services.serviceFee}
             </Text>
             <Text style={styles.serviceFeeText}>
-              {`${t.reviewBooking.customerInfo.price} ${appointmentData?.salon?.service_fee || '0'}`}
+              {`${t.reviewBooking.customerInfo.price} ${
+                appointmentData?.salon?.service_fee || '0'
+              }`}
             </Text>
           </View>
           <View style={styles.serviceRow}>
@@ -601,7 +627,9 @@ console.log('user appointment name', appointmentData?.user?.name);
               {t.reviewBooking.services.total}
             </Text>
             <Text style={styles.totalText}>
-              {`${t.reviewBooking.customerInfo.price} ${calculateTotalAmount()}`}
+              {`${
+                t.reviewBooking.customerInfo.price
+              } ${calculateTotalAmount()}`}
             </Text>
           </View>
         </View>
@@ -611,19 +639,22 @@ console.log('user appointment name', appointmentData?.user?.name);
           <Text style={styles.locationTitle}>
             {t.reviewBooking.phone.title}
           </Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.phoneButton, isRTL && styles.phoneButtonRTL]}
             onPress={handlePhoneCall}
-            disabled={!appointmentData?.user?.phone_number}
-          >
-            <Icon 
-              name="phone" 
-              size={20} 
-              color={Colors.white} 
-              style={isRTL ? { marginLeft: 10, marginRight: 0 } : { marginRight: 10, marginLeft: 0 }}
+            disabled={!appointmentData?.user?.phone_number}>
+            <Icon
+              name="phone"
+              size={20}
+              color={Colors.white}
+              style={
+                isRTL
+                  ? {marginLeft: 10, marginRight: 0}
+                  : {marginRight: 10, marginLeft: 0}
+              }
             />
             <Text style={[styles.phoneText, isRTL && styles.phoneTextRTL]}>
-              {appointmentData?.user?.phone_number 
+              {appointmentData?.user?.phone_number
                 ? `${t.reviewBooking.phone.call} ${appointmentData.user.phone_number}`
                 : t.reviewBooking.phone.noPhone}
             </Text>
@@ -631,11 +662,9 @@ console.log('user appointment name', appointmentData?.user?.name);
         </View>
 
         {/* Note Section */}
-        <Text style={[styles.locationTitle]}>
-          {t.reviewBooking.note.title}
-        </Text>
+        <Text style={[styles.locationTitle]}>{t.reviewBooking.note.title}</Text>
         <View style={[styles.noteContainer]}>
-          <Text style={[styles.noteText, isRTL && { textAlign: 'left' }]}> 
+          <Text style={[styles.noteText, isRTL && {textAlign: 'left'}]}>
             {appointmentData?.note || t.reviewBooking.note.noNote}
           </Text>
         </View>
@@ -644,7 +673,7 @@ console.log('user appointment name', appointmentData?.user?.name);
           <Text style={[styles.locationTitle]}>
             {t.reviewBooking.location.title}
           </Text>
-          
+
           {loadingAddress ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" color={Colors.gold} />
@@ -665,16 +694,15 @@ console.log('user appointment name', appointmentData?.user?.name);
                 <Icon name="location-on" size={24} color={Colors.gold} />
                 <Text style={styles.addressTitle}>
                   {t.reviewBooking.location.addressTitle}
-                </Text> 
+                </Text>
               </View>
               <Text style={styles.addressDescription}>
                 {address.description}
               </Text>
-              
-              <TouchableOpacity 
+
+              <TouchableOpacity
                 style={styles.mapButton}
-                onPress={openGoogleMapsDirections}
-              >
+                onPress={openGoogleMapsDirections}>
                 <Icon name="directions" size={20} color={Colors.black} />
                 <Text style={styles.mapButtonText}>
                   {t.reviewBooking.location.getDirections}
@@ -887,7 +915,7 @@ const styles = StyleSheet.create({
   addressDescriptionRTL: {
     textAlign: 'left',
     marginLeft: 12,
-  },  
+  },
   mapButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -956,11 +984,10 @@ const styles = StyleSheet.create({
     fontFamily: 'Maitree-Medium',
     textAlign: 'center',
   },
-  
+
   phoneContainer: {
     marginTop: 20,
     marginBottom: 20,
-    
   },
   phoneButton: {
     flexDirection: 'row',
@@ -996,7 +1023,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.gold,
     shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,

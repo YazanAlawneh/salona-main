@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
 import Colors from '../../../../constants/Colors';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useTranslation } from '../../../../contexts/TranslationContext';
+import {useTranslation} from '../../../../contexts/TranslationContext';
 interface Category {
   id: number;
   name: string;
@@ -33,12 +33,12 @@ const CategoriesModal: React.FC<CategoriesModalProps> = ({
   onSave,
   initialSelectedCategories = [],
 }) => {
-  const { t, isRTL } = useTranslation();
+  const {t, isRTL} = useTranslation();
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCategories, setSelectedCategories] = useState<number[]>(
-    initialSelectedCategories
+    initialSelectedCategories,
   );
 
   useEffect(() => {
@@ -57,29 +57,28 @@ const CategoriesModal: React.FC<CategoriesModalProps> = ({
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(
-        'https://spa.dev2.prodevr.com/api/categories',
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const response = await fetch('https://bella-glam.com/api/categories', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to fetch categories: ${response.status}`);
       }
 
       const data = await response.json();
-      
+
       if (data.success) {
         setCategories(data.categories);
       } else {
         throw new Error('Failed to fetch categories');
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to fetch categories');
+      setError(
+        error instanceof Error ? error.message : 'Failed to fetch categories',
+      );
     } finally {
       setIsLoading(false);
     }
@@ -89,14 +88,14 @@ const CategoriesModal: React.FC<CategoriesModalProps> = ({
     setSelectedCategories(prev =>
       prev.includes(categoryId)
         ? prev.filter(id => id !== categoryId)
-        : [...prev, categoryId]
+        : [...prev, categoryId],
     );
   };
 
   const handleSave = async () => {
     try {
       setIsLoading(true);
-      
+
       const token = await AsyncStorage.getItem('token');
       if (!token) {
         setError('Authentication token not found');
@@ -106,34 +105,37 @@ const CategoriesModal: React.FC<CategoriesModalProps> = ({
       // Format categories exactly as required
       const requestBody = {
         categories: selectedCategories.map(id => ({
-          id: id
-        }))
+          id: id,
+        })),
       };
 
       // Log API call details
       console.log('=== Update Categories API Call ===');
-      console.log('URL:', 'https://spa.dev2.prodevr.com/api/salons/update-salon-category');
+      console.log(
+        'URL:',
+        'https://bella-glam.com/api/salons/update-salon-category',
+      );
       console.log('Method:', 'POST');
       console.log('Headers:', {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
       });
       console.log('Request Body:', JSON.stringify(requestBody, null, 2));
 
       const response = await fetch(
-        'https://spa.dev2.prodevr.com/api/salons/update-salon-category',
+        'https://bella-glam.com/api/salons/update-salon-category',
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(requestBody),
-        }
+        },
       );
 
       const responseData = await response.json();
-      
+
       // Log API response
       console.log('=== Update Categories API Response ===');
       console.log('Status:', response.status);
@@ -163,7 +165,9 @@ const CategoriesModal: React.FC<CategoriesModalProps> = ({
       return (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={fetchCategories}>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={fetchCategories}>
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
@@ -177,12 +181,13 @@ const CategoriesModal: React.FC<CategoriesModalProps> = ({
             key={category.id}
             style={[
               styles.categoryItem,
-              selectedCategories.includes(category.id) && styles.selectedCategory,
+              selectedCategories.includes(category.id) &&
+                styles.selectedCategory,
             ]}
             onPress={() => toggleCategory(category.id)}>
             <View style={styles.categoryContent}>
-              <Image 
-                source={{ uri: category.image_url }} 
+              <Image
+                source={{uri: category.image_url}}
                 style={styles.categoryImage}
                 resizeMode="cover"
               />
@@ -190,11 +195,14 @@ const CategoriesModal: React.FC<CategoriesModalProps> = ({
                 <Text
                   style={[
                     styles.categoryText,
-                    selectedCategories.includes(category.id) && styles.selectedCategoryText,
+                    selectedCategories.includes(category.id) &&
+                      styles.selectedCategoryText,
                   ]}>
                   {category.name}
                 </Text>
-                <Text style={styles.categoryDescription}>{category.description}</Text>
+                <Text style={styles.categoryDescription}>
+                  {category.description}
+                </Text>
               </View>
             </View>
             {selectedCategories.includes(category.id) && (
@@ -214,8 +222,12 @@ const CategoriesModal: React.FC<CategoriesModalProps> = ({
       onRequestClose={onClose}>
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          <View style={[styles.header, {flexDirection: isRTL ? 'row-reverse' : 'row'}]}>
-            <Text style={styles.title }>{t.salonProfile.categories}</Text>
+          <View
+            style={[
+              styles.header,
+              {flexDirection: isRTL ? 'row-reverse' : 'row'},
+            ]}>
+            <Text style={styles.title}>{t.salonProfile.categories}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <Icon name="close" size={24} color={Colors.gold} />
             </TouchableOpacity>
@@ -223,14 +235,16 @@ const CategoriesModal: React.FC<CategoriesModalProps> = ({
 
           {renderContent()}
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[
               styles.saveButton,
-              (!categories || categories.length === 0) && styles.disabledButton
-            ]} 
+              (!categories || categories.length === 0) && styles.disabledButton,
+            ]}
             onPress={handleSave}
             disabled={!categories || categories.length === 0}>
-            <Text style={styles.saveButtonText}>{t.salonProfile.setCategories}</Text>
+            <Text style={styles.saveButtonText}>
+              {t.salonProfile.setCategories}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -352,4 +366,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CategoriesModal; 
+export default CategoriesModal;

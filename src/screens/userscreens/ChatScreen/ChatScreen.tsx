@@ -60,9 +60,14 @@ const ChatScreen: React.FC<ChatScreenProps> = ({route, navigation}) => {
       try {
         console.log('===== STARTING FIREBASE FETCH =====');
         console.log('Attempting to fetch messages from Firebase');
-        const firebaseMessages = await chatService.getMessages(currentUser.id, user.id, false, token);
+        const firebaseMessages = await chatService.getMessages(
+          currentUser.id,
+          user.id,
+          false,
+          token,
+        );
         console.log('Firebase messages result:', firebaseMessages);
-        
+
         // Convert Firebase messages to our format
         const formattedMessages = firebaseMessages.map((msg: any) => {
           console.log('Processing Firebase message:', msg);
@@ -74,42 +79,44 @@ const ChatScreen: React.FC<ChatScreenProps> = ({route, navigation}) => {
             time: msg.time || msg.created_at,
           };
         });
-        
+
         // Sort messages by time
-        const sortedMessages = formattedMessages.sort((a, b) => 
-          new Date(a.time).getTime() - new Date(b.time).getTime()
+        const sortedMessages = formattedMessages.sort(
+          (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
         );
-        
+
         setMessages(sortedMessages);
         console.log('===== FIREBASE FETCH COMPLETED =====');
-        
+
         // After getting Firebase messages, fetch older messages from API
         console.log('Fetching older messages from API');
         try {
           console.log('===== STARTING API CALL =====');
-          const apiUrl = `https://spa.dev2.prodevr.com/api/get-messages/${user.id}`;
+          const apiUrl = `https://bella-glam.com/api/get-messages/${user.id}`;
           console.log('API URL:', apiUrl);
-          console.log('API Headers:', { 'Authorization': `Bearer ${token.substring(0, 10)}...` });
-          
+          console.log('API Headers:', {
+            Authorization: `Bearer ${token.substring(0, 10)}...`,
+          });
+
           const response = await fetch(apiUrl, {
             method: 'GET',
             headers: {
-              'Authorization': `Bearer ${token}`,
+              Authorization: `Bearer ${token}`,
             },
           });
-          
+
           console.log('API Response Status:', response.status);
-          
+
           if (!response.ok) {
             const errorText = await response.text();
             console.error('API Error Response:', errorText);
             throw new Error(`API error: ${response.status} - ${errorText}`);
           }
-          
+
           const data = await response.json();
           console.log('API Response Data:', JSON.stringify(data, null, 2));
           console.log('Received messages from API:', data.length);
-          
+
           // Convert API messages to our format
           const apiMessages: Message[] = data.map((msg: any) => {
             console.log('Processing API message:', msg);
@@ -121,22 +128,27 @@ const ChatScreen: React.FC<ChatScreenProps> = ({route, navigation}) => {
               time: msg.created_at,
             };
           });
-          
+
           // Merge API messages with Firebase messages
           setMessages(prevMessages => {
             const allMessages = [...apiMessages, ...prevMessages];
             // Remove duplicates based on time and content
-            const uniqueMessages = allMessages.filter((msg, index, self) =>
-              index === self.findIndex(m => 
-                m.time === msg.time && 
-                m.sender_id === msg.sender_id && 
-                m.text === msg.text
-              )
+            const uniqueMessages = allMessages.filter(
+              (msg, index, self) =>
+                index ===
+                self.findIndex(
+                  m =>
+                    m.time === msg.time &&
+                    m.sender_id === msg.sender_id &&
+                    m.text === msg.text,
+                ),
             );
             // Sort all messages by time
-            return uniqueMessages.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+            return uniqueMessages.sort(
+              (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
+            );
           });
-          
+
           console.log('===== API CALL COMPLETED =====');
         } catch (error) {
           console.error('Error fetching older messages from API:', error);
@@ -145,30 +157,39 @@ const ChatScreen: React.FC<ChatScreenProps> = ({route, navigation}) => {
         console.error('Error in loadMessages:', error);
       }
     };
-    
+
     console.log('Calling loadMessages function');
     loadMessages();
 
     // Subscribe to real-time messages from Firebase
-    const unsubscribe = chatService.subscribeToMessages(currentUser.id, user.id, (firebaseMessages) => {
-      console.log('Received messages update from Firebase:', firebaseMessages);
-      
-      // Convert Firebase messages to our format
-      const formattedMessages = firebaseMessages.map((msg: any) => {
-        console.log('Processing real-time Firebase message:', msg);
-        return {
-          id: msg.id,
-          text: msg.message,
-          sender_id: parseInt(msg.sender_id),
-          receiver_id: parseInt(msg.receiver_id),
-          time: msg.time || msg.created_at,
-        };
-      });
-      
-      setMessages(formattedMessages.sort((a, b) => 
-        new Date(a.time).getTime() - new Date(b.time).getTime()
-      ));
-    });
+    const unsubscribe = chatService.subscribeToMessages(
+      currentUser.id,
+      user.id,
+      firebaseMessages => {
+        console.log(
+          'Received messages update from Firebase:',
+          firebaseMessages,
+        );
+
+        // Convert Firebase messages to our format
+        const formattedMessages = firebaseMessages.map((msg: any) => {
+          console.log('Processing real-time Firebase message:', msg);
+          return {
+            id: msg.id,
+            text: msg.message,
+            sender_id: parseInt(msg.sender_id),
+            receiver_id: parseInt(msg.receiver_id),
+            time: msg.time || msg.created_at,
+          };
+        });
+
+        setMessages(
+          formattedMessages.sort(
+            (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
+          ),
+        );
+      },
+    );
 
     // Cleanup subscription on unmount
     return () => {
@@ -184,7 +205,12 @@ const ChatScreen: React.FC<ChatScreenProps> = ({route, navigation}) => {
     setNewMessage('');
 
     // Send message through service
-    const sent = await chatService.sendMessage(messageText, user.id, token, currentUser.id);
+    const sent = await chatService.sendMessage(
+      messageText,
+      user.id,
+      token,
+      currentUser.id,
+    );
 
     if (!sent) {
       // Show error message to user
@@ -200,7 +226,16 @@ const ChatScreen: React.FC<ChatScreenProps> = ({route, navigation}) => {
   const renderMessage = ({item}: {item: Message}) => {
     // Check if the message is from the current user
     const isUserMessage = item.sender_id === currentUser?.id;
-    console.log('Message:', item.text, 'Sender ID:', item.sender_id, 'Current User ID:', currentUser?.id, 'Is User Message:', isUserMessage);
+    console.log(
+      'Message:',
+      item.text,
+      'Sender ID:',
+      item.sender_id,
+      'Current User ID:',
+      currentUser?.id,
+      'Is User Message:',
+      isUserMessage,
+    );
 
     return (
       <View
@@ -209,10 +244,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({route, navigation}) => {
           isUserMessage ? styles.userMessage : styles.providerMessage,
         ]}>
         {!isUserMessage && (
-          <Image
-            source={{uri: user.image_url}}
-            style={styles.providerAvatar}
-          />
+          <Image source={{uri: user.image_url}} style={styles.providerAvatar} />
         )}
         <View
           style={[
@@ -253,10 +285,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({route, navigation}) => {
           <Icon name="arrow-back" size={24} color={Colors.white} />
         </TouchableOpacity>
         <View style={styles.userInfo}>
-          <Image
-            source={{uri: user.image_url}}
-            style={styles.headerAvatar}
-          />
+          <Image source={{uri: user.image_url}} style={styles.headerAvatar} />
           <View>
             <Text style={styles.userName}>{user.name}</Text>
             <Text style={styles.userStatus}>Online</Text>
@@ -378,7 +407,7 @@ const styles = StyleSheet.create({
     padding: 10,
     maxWidth: '80%',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 2,
@@ -389,7 +418,7 @@ const styles = StyleSheet.create({
     padding: 10,
     maxWidth: '80%',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 2,
@@ -453,4 +482,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ChatScreen; 
+export default ChatScreen;

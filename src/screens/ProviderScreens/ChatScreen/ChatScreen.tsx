@@ -32,7 +32,9 @@ interface Message {
 const ChatScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const {user} = route.params as {user: {id: number; name: string; image_url: string}};
+  const {user} = route.params as {
+    user: {id: number; name: string; image_url: string};
+  };
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -44,7 +46,11 @@ const ChatScreen = () => {
 
   useEffect(() => {
     if (!provider?.id || !user.id || !token) {
-      console.log('Missing required data:', { providerId: provider?.id, userId: user.id, hasToken: !!token });
+      console.log('Missing required data:', {
+        providerId: provider?.id,
+        userId: user.id,
+        hasToken: !!token,
+      });
       return;
     }
 
@@ -54,48 +60,60 @@ const ChatScreen = () => {
     });
 
     // Subscribe to real-time messages from Firebase first
-    const unsubscribe = chatService.subscribeToMessages(provider.id, user.id, (firebaseMessages) => {
-      console.log('Received messages update from Firebase:', firebaseMessages);
-      
-      // Merge Firebase messages with existing messages
-      setMessages(prevMessages => {
-        const allMessages = [...prevMessages];
-        
-        // Process Firebase messages - handle both array and object formats
-        const messagesToProcess = Array.isArray(firebaseMessages) ? firebaseMessages : Object.values(firebaseMessages);
-        
-        let hasNewMessages = false;
-        messagesToProcess.forEach((msg: any) => {
-          const firebaseMsg: Message = {
-            message: msg.message,
-            sender_id: parseInt(msg.sender_id),
-            receiver_id: parseInt(msg.receiver_id),
-            time: msg.time,
-          };
-          
-          // Check if message already exists
-          const existingIndex = allMessages.findIndex(
-            m => m.time === msg.time && 
-                m.sender_id === parseInt(msg.sender_id) && 
-                m.message === msg.message
-          );
-          
-          if (existingIndex === -1) {
-            allMessages.push(firebaseMsg);
-            hasNewMessages = true;
+    const unsubscribe = chatService.subscribeToMessages(
+      provider.id,
+      user.id,
+      firebaseMessages => {
+        console.log(
+          'Received messages update from Firebase:',
+          firebaseMessages,
+        );
+
+        // Merge Firebase messages with existing messages
+        setMessages(prevMessages => {
+          const allMessages = [...prevMessages];
+
+          // Process Firebase messages - handle both array and object formats
+          const messagesToProcess = Array.isArray(firebaseMessages)
+            ? firebaseMessages
+            : Object.values(firebaseMessages);
+
+          let hasNewMessages = false;
+          messagesToProcess.forEach((msg: any) => {
+            const firebaseMsg: Message = {
+              message: msg.message,
+              sender_id: parseInt(msg.sender_id),
+              receiver_id: parseInt(msg.receiver_id),
+              time: msg.time,
+            };
+
+            // Check if message already exists
+            const existingIndex = allMessages.findIndex(
+              m =>
+                m.time === msg.time &&
+                m.sender_id === parseInt(msg.sender_id) &&
+                m.message === msg.message,
+            );
+
+            if (existingIndex === -1) {
+              allMessages.push(firebaseMsg);
+              hasNewMessages = true;
+            }
+          });
+
+          if (!hasNewMessages) {
+            return prevMessages;
           }
+
+          // Sort all messages by time (oldest first)
+          const sortedMessages = allMessages.sort(
+            (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
+          );
+          console.log('Updated messages:', sortedMessages.length, 'messages');
+          return sortedMessages;
         });
-        
-        if (!hasNewMessages) {
-          return prevMessages;
-        }
-        
-        // Sort all messages by time (oldest first)
-        const sortedMessages = allMessages.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
-        console.log('Updated messages:', sortedMessages.length, 'messages');
-        return sortedMessages;
-      });
-    });
+      },
+    );
 
     // Then fetch older messages from the API
     fetchOlderMessages();
@@ -116,21 +134,24 @@ const ChatScreen = () => {
     try {
       setLoading(true);
       console.log('Fetching messages from API for user:', user.id);
-      
-      const response = await fetch(`https://spa.dev2.prodevr.com/api/get-messages/${user.id}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
+
+      const response = await fetch(
+        `https://bella-glam.com/api/get-messages/${user.id}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
-      
+      );
+
       if (!response.ok) {
         throw new Error(`API error: ${response.status}`);
       }
-      
+
       const data = await response.json();
       console.log('Received messages from API:', data.length);
-      
+
       // Convert API messages to the format expected by the component
       const apiMessages: Message[] = data.map((msg: any) => ({
         id: msg.id,
@@ -139,25 +160,32 @@ const ChatScreen = () => {
         receiver_id: msg.receiver_id,
         time: msg.created_at || msg.time,
       }));
-      
+
       // Sort messages by time (oldest first)
-      apiMessages.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
-      
+      apiMessages.sort(
+        (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
+      );
+
       // Update messages while preserving any Firebase messages
       setMessages(prevMessages => {
         const allMessages = [...apiMessages, ...prevMessages];
         // Remove duplicates based on time and content
-        const uniqueMessages = allMessages.filter((msg, index, self) =>
-          index === self.findIndex(m => 
-            m.time === msg.time && 
-            m.sender_id === msg.sender_id && 
-            m.message === msg.message
-          )
+        const uniqueMessages = allMessages.filter(
+          (msg, index, self) =>
+            index ===
+            self.findIndex(
+              m =>
+                m.time === msg.time &&
+                m.sender_id === msg.sender_id &&
+                m.message === msg.message,
+            ),
         );
         // Sort all messages
-        return uniqueMessages.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+        return uniqueMessages.sort(
+          (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
+        );
       });
-      
+
       setHasMoreMessages(apiMessages.length >= 20); // Assuming 20 is the page size
     } catch (error) {
       console.error('Error fetching messages from API:', error);
@@ -169,7 +197,7 @@ const ChatScreen = () => {
 
   const loadMoreMessages = async () => {
     if (loadingMore || !hasMoreMessages) return;
-    
+
     try {
       setLoadingMore(true);
       // Here you would implement pagination to load older messages
@@ -187,7 +215,7 @@ const ChatScreen = () => {
       console.log('Cannot send message:', {
         hasMessage: !!newMessage.trim(),
         providerId: provider?.id,
-        hasToken: !!token
+        hasToken: !!token,
       });
       return;
     }
@@ -198,11 +226,17 @@ const ChatScreen = () => {
     console.log('Attempting to send message:', {
       text: messageText,
       to: user.id,
-      from: provider.id
+      from: provider.id,
     });
 
     // Send message through service
-    const sent = await chatService.sendMessage(messageText, user.id, token, provider.id, true);
+    const sent = await chatService.sendMessage(
+      messageText,
+      user.id,
+      token,
+      provider.id,
+      true,
+    );
 
     if (!sent) {
       console.error('Failed to send message');
@@ -239,7 +273,7 @@ const ChatScreen = () => {
 
   const renderFooter = () => {
     if (!loadingMore) return null;
-    
+
     return (
       <View style={styles.loadingMoreContainer}>
         <ActivityIndicator size="small" color={Colors.gold} />
@@ -274,7 +308,7 @@ const ChatScreen = () => {
           ref={flatListRef}
           data={messages}
           renderItem={renderMessage}
-          keyExtractor={(item) => {
+          keyExtractor={item => {
             // Create a unique key using multiple message properties
             return `${item.time}_${item.sender_id}_${item.message}`;
           }}
@@ -296,7 +330,10 @@ const ChatScreen = () => {
           multiline
         />
         <TouchableOpacity
-          style={[styles.sendButton, !newMessage.trim() && styles.sendButtonDisabled]}
+          style={[
+            styles.sendButton,
+            !newMessage.trim() && styles.sendButtonDisabled,
+          ]}
           onPress={handleSend}
           disabled={!newMessage.trim()}>
           <Icon
@@ -407,4 +444,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ChatScreen; 
+export default ChatScreen;

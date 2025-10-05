@@ -1,5 +1,15 @@
 import React, {useEffect, useState, useMemo} from 'react';
-import {View, Text, TouchableOpacity, ScrollView, Alert, I18nManager, Modal, TextInput, ActivityIndicator} from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  I18nManager,
+  Modal,
+  TextInput,
+  ActivityIndicator,
+} from 'react-native';
 import styles from '../SalonProfile.styles';
 import {Salon} from '../../../../types/salon';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -7,7 +17,7 @@ import Colors from '../../../../constants/Colors';
 import EditAvailabilityModal from './EditAvailabilityModal';
 import BlockTimeModal from './BlockTimeModal';
 import CategoriesModal from './CategoriesModal';
-import { useTranslation } from '../../../../contexts/TranslationContext';
+import {useTranslation} from '../../../../contexts/TranslationContext';
 import {useSelector} from 'react-redux';
 import {RootState} from '../../../../redux/store';
 
@@ -17,10 +27,14 @@ interface AboutTabProps {
   onAvailabilityUpdate: () => void;
 }
 
-const AboutTab: React.FC<AboutTabProps> = ({salon, salonId, onAvailabilityUpdate}) => {
-  const { t, isRTL } = useTranslation();
-  const { token } = useSelector((state: RootState) => state.auth);
-  
+const AboutTab: React.FC<AboutTabProps> = ({
+  salon,
+  salonId,
+  onAvailabilityUpdate,
+}) => {
+  const {t, isRTL} = useTranslation();
+  const {token} = useSelector((state: RootState) => state.auth);
+
   const [selectedDay, setSelectedDay] = useState<{
     id: number;
     openingTime: string;
@@ -29,7 +43,8 @@ const AboutTab: React.FC<AboutTabProps> = ({salon, salonId, onAvailabilityUpdate
   } | null>(null);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isBlockTimeModalVisible, setIsBlockTimeModalVisible] = useState(false);
-  const [isCategoriesModalVisible, setIsCategoriesModalVisible] = useState(false);
+  const [isCategoriesModalVisible, setIsCategoriesModalVisible] =
+    useState(false);
   const [showTravelFeesModal, setShowTravelFeesModal] = useState(false);
   const [travelFees, setTravelFees] = useState<string>('');
   const [isLoadingFees, setIsLoadingFees] = useState(false);
@@ -46,9 +61,17 @@ const AboutTab: React.FC<AboutTabProps> = ({salon, salonId, onAvailabilityUpdate
   // Sort availabilities to start from Sunday
   const sortedAvailabilities = useMemo(() => {
     if (!salon?.availabilities) return [];
-    
-    const dayOrder = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    
+
+    const dayOrder = [
+      'sunday',
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+    ];
+
     return [...salon.availabilities].sort((a, b) => {
       const aIndex = dayOrder.indexOf(a.day.toLowerCase());
       const bIndex = dayOrder.indexOf(b.day.toLowerCase());
@@ -98,10 +121,10 @@ const AboutTab: React.FC<AboutTabProps> = ({salon, salonId, onAvailabilityUpdate
         return;
       }
 
-      const response = await fetch('https://spa.dev2.prodevr.com/api/me', {
+      const response = await fetch('https://bella-glam.com/api/me', {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
         },
       });
 
@@ -110,7 +133,7 @@ const AboutTab: React.FC<AboutTabProps> = ({salon, salonId, onAvailabilityUpdate
       }
 
       const data = await response.json();
-      if (data.message === "user data return successfully" && data.data) {
+      if (data.message === 'user data return successfully' && data.data) {
         setTravelFees(data.data.service_fee || '0');
       }
     } catch (error) {
@@ -130,14 +153,17 @@ const AboutTab: React.FC<AboutTabProps> = ({salon, salonId, onAvailabilityUpdate
       const formData = new FormData();
       formData.append('service_fee', travelFees);
 
-      const response = await fetch('https://spa.dev2.prodevr.com/api/update-service-fee', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`,
+      const response = await fetch(
+        'https://bella-glam.com/api/update-service-fee',
+        {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
         },
-        body: formData,
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to update travel fees: ${response.status}`);
@@ -167,50 +193,72 @@ const AboutTab: React.FC<AboutTabProps> = ({salon, salonId, onAvailabilityUpdate
   }, [salon]);
 
   return (
-    <ScrollView 
-      style={[styles.aboutContainer, isRTL && { direction: 'rtl' }]} 
-      showsVerticalScrollIndicator={false}
-    >
+    <ScrollView
+      style={[styles.aboutContainer, isRTL && {direction: 'rtl'}]}
+      showsVerticalScrollIndicator={false}>
       {/* Opening Times Section */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>
           {t.salonProfile.about.openingTimes}
         </Text>
-        
-                 {sortedAvailabilities.map((availability) => (
-           <View key={availability.id} style={[styles.row, isRTL && styles.rowRTL]}>
-             <Text style={[styles.label, isRTL && styles.labelRTL, {textTransform: 'capitalize'}]}>
-               {translateDay(availability.day)}
-             </Text>
-             <View style={[styles.timeContainer, isRTL && styles.timeContainerRTL]}>
-               <TouchableOpacity
-                 style={[styles.editButton, isRTL && styles.editButtonRTL]}
-                 onPress={() => handleEditPress(availability)}>
-                 <Icon name="edit" size={24} color={Colors.gold} />
-               </TouchableOpacity>
-               <Text style={[styles.value, isRTL && styles.valueRTL]}>
-                 {formatTime(availability.opening_time)} - {formatTime(availability.closing_time)}
-               </Text>
-             </View>
-           </View>
-         ))}
+
+        {sortedAvailabilities.map(availability => (
+          <View
+            key={availability.id}
+            style={[styles.row, isRTL && styles.rowRTL]}>
+            <Text
+              style={[
+                styles.label,
+                isRTL && styles.labelRTL,
+                {textTransform: 'capitalize'},
+              ]}>
+              {translateDay(availability.day)}
+            </Text>
+            <View
+              style={[styles.timeContainer, isRTL && styles.timeContainerRTL]}>
+              <TouchableOpacity
+                style={[styles.editButton, isRTL && styles.editButtonRTL]}
+                onPress={() => handleEditPress(availability)}>
+                <Icon name="edit" size={24} color={Colors.gold} />
+              </TouchableOpacity>
+              <Text style={[styles.value, isRTL && styles.valueRTL]}>
+                {formatTime(availability.opening_time)} -{' '}
+                {formatTime(availability.closing_time)}
+              </Text>
+            </View>
+          </View>
+        ))}
       </View>
 
       {/* Forbidden Times Section */}
       <View style={styles.sectionContainer}>
         <TouchableOpacity
-          style={[styles.button, { marginBottom: 10, marginTop: 10, backgroundColor: Colors.gold }]}
+          style={[
+            styles.button,
+            {marginBottom: 10, marginTop: 10, backgroundColor: Colors.gold},
+          ]}
           onPress={() => setIsBlockTimeModalVisible(true)}>
-          <Text style={[styles.buttonText, { color: Colors.black }]}>{t.salonProfile.blockTime.title}</Text>
+          <Text style={[styles.buttonText, {color: Colors.black}]}>
+            {t.salonProfile.blockTime.title}
+          </Text>
         </TouchableOpacity>
       </View>
 
       {/* Travel Fees Section */}
       <View style={styles.sectionContainer}>
         <TouchableOpacity
-          style={[styles.button, { marginBottom: 20, backgroundColor: Colors.black, borderColor: Colors.gold }]}
+          style={[
+            styles.button,
+            {
+              marginBottom: 20,
+              backgroundColor: Colors.black,
+              borderColor: Colors.gold,
+            },
+          ]}
           onPress={openTravelFeesModal}>
-          <Text style={[styles.buttonText, { color: Colors.gold }]}>{t.salonProfile.about.travelFees}</Text>
+          <Text style={[styles.buttonText, {color: Colors.gold}]}>
+            {t.salonProfile.about.travelFees}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -219,12 +267,18 @@ const AboutTab: React.FC<AboutTabProps> = ({salon, salonId, onAvailabilityUpdate
         visible={showTravelFeesModal}
         transparent={true}
         animationType="slide"
-        onRequestClose={() => setShowTravelFeesModal(false)}
-      >
+        onRequestClose={() => setShowTravelFeesModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <View style={styles.modalHeader && isRTL ? styles.modalHeaderRTL : styles.modalHeader}>
-              <Text style={styles.modalTitle}>{t.salonProfile.about.updateTravelFees}</Text>
+            <View
+              style={
+                styles.modalHeader && isRTL
+                  ? styles.modalHeaderRTL
+                  : styles.modalHeader
+              }>
+              <Text style={styles.modalTitle}>
+                {t.salonProfile.about.updateTravelFees}
+              </Text>
               <TouchableOpacity onPress={() => setShowTravelFeesModal(false)}>
                 <Icon name="close" size={24} color={Colors.white} />
               </TouchableOpacity>
@@ -232,7 +286,9 @@ const AboutTab: React.FC<AboutTabProps> = ({salon, salonId, onAvailabilityUpdate
             {isLoadingFees ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator color={Colors.gold} size="small" />
-                <Text style={styles.loadingText}>{t.salonProfile.about.pleaseWait}</Text>
+                <Text style={styles.loadingText}>
+                  {t.salonProfile.about.pleaseWait}
+                </Text>
               </View>
             ) : (
               <>
@@ -249,9 +305,10 @@ const AboutTab: React.FC<AboutTabProps> = ({salon, salonId, onAvailabilityUpdate
                 />
                 <TouchableOpacity
                   style={styles.updateButton}
-                  onPress={handleTravelFeesUpdate}
-                >
-                  <Text style={styles.updateButtonText}>{t.salonProfile.about.update}</Text>
+                  onPress={handleTravelFeesUpdate}>
+                  <Text style={styles.updateButtonText}>
+                    {t.salonProfile.about.update}
+                  </Text>
                 </TouchableOpacity>
               </>
             )}
@@ -289,4 +346,4 @@ const AboutTab: React.FC<AboutTabProps> = ({salon, salonId, onAvailabilityUpdate
   );
 };
 
-export default AboutTab; 
+export default AboutTab;

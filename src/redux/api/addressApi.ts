@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/query/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Types
@@ -24,7 +24,7 @@ export interface AddAddressRequest {
 }
 
 // Previous API URL (commented out)
-// const API_BASE_URL = 'https://spa.dev2.prodevr.com/api';
+// const API_BASE_URL = 'https://bella-glam.com/api';
 
 // New API URL
 const API_BASE_URL = 'https://bella-glam.com/api';
@@ -32,7 +32,10 @@ const API_BASE_URL = 'https://bella-glam.com/api';
 const prepareHeaders = async (headers: Headers) => {
   try {
     const token = await AsyncStorage.getItem('token');
-    console.log('Token from storage:', token ? 'Token exists' : 'No token found');
+    console.log(
+      'Token from storage:',
+      token ? 'Token exists' : 'No token found',
+    );
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
     }
@@ -50,7 +53,7 @@ export const addressApi = createApi({
     prepareHeaders,
   }),
   tagTypes: ['Address'],
-  endpoints: (builder) => ({
+  endpoints: builder => ({
     getUserAddresses: builder.query<AddressResponse, void>({
       query: () => 'addresses',
       providesTags: ['Address'],
@@ -68,23 +71,26 @@ export const addressApi = createApi({
         };
       },
     }),
-    addAddress: builder.mutation<{ success: boolean }, AddAddressRequest>({
-      query: (addressData) => ({
+    addAddress: builder.mutation<{success: boolean}, AddAddressRequest>({
+      query: addressData => ({
         url: 'new-address',
         method: 'POST',
         body: addressData,
       }),
       invalidatesTags: ['Address'],
     }),
-    deleteAddress: builder.mutation<{ success: boolean }, { addressId: number }>({
-      query: ({ addressId }) => ({
+    deleteAddress: builder.mutation<{success: boolean}, {addressId: number}>({
+      query: ({addressId}) => ({
         url: `addresses/${addressId}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Address'],
     }),
-    setPrimaryAddress: builder.mutation<{ success: boolean }, { addressId: number }>({
-      query: ({ addressId }) => ({
+    setPrimaryAddress: builder.mutation<
+      {success: boolean},
+      {addressId: number}
+    >({
+      query: ({addressId}) => ({
         url: `addresses/${addressId}/set-primary`,
         method: 'PATCH',
       }),
@@ -98,4 +104,4 @@ export const {
   useAddAddressMutation,
   useDeleteAddressMutation,
   useSetPrimaryAddressMutation,
-} = addressApi; 
+} = addressApi;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -9,13 +9,13 @@ import {
   ActivityIndicator,
   StatusBar,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../../redux/store';
+import {useNavigation} from '@react-navigation/native';
+import {useSelector} from 'react-redux';
+import {RootState} from '../../../redux/store';
 import Colors from '../../../constants/Colors';
 import ProviderFooter from '../../../components/ProviderFooter/ProviderFooter';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useTranslation } from '../../../contexts/TranslationContext';
+import {useTranslation} from '../../../contexts/TranslationContext';
 
 // Updated interface to match the current API response
 interface ChatPreview {
@@ -41,7 +41,7 @@ const ChatListScreen = () => {
   const [chats, setChats] = useState<ChatPreview[]>([]);
   const [loading, setLoading] = useState(true);
   const token = useSelector((state: RootState) => state.auth.token);
-  const { t } = useTranslation();
+  const {t} = useTranslation();
 
   useEffect(() => {
     console.log('ChatListScreen mounted, hasToken:', !!token);
@@ -57,35 +57,38 @@ const ChatListScreen = () => {
     try {
       console.log('Loading chats from API');
       setLoading(true);
-      
-      const response = await fetch('https://spa.dev2.prodevr.com/api/get-chats', {
+
+      const response = await fetch('https://bella-glam.com/api/get-chats', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
-      
+
       if (!response.ok) {
         throw new Error(`API error: ${response.status}`);
       }
-      
+
       const data = await response.json();
       console.log('Received chats:', data);
-      
+
       // Make sure we have an array of chats
       const chatArray = Array.isArray(data) ? data : [];
-      
+
       // Fetch the latest message for each chat
       const chatsWithMessages = await Promise.all(
-        chatArray.map(async (chat) => {
+        chatArray.map(async chat => {
           try {
-            const messageResponse = await fetch(`https://spa.dev2.prodevr.com/api/get-messages/${chat.other_user_id}`, {
-              method: 'GET',
-              headers: {
-                'Authorization': `Bearer ${token}`,
+            const messageResponse = await fetch(
+              `https://bella-glam.com/api/get-messages/${chat.other_user_id}`,
+              {
+                method: 'GET',
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
               },
-            });
-            
+            );
+
             if (messageResponse.ok) {
               const messages = await messageResponse.json();
               if (Array.isArray(messages) && messages.length > 0) {
@@ -99,12 +102,15 @@ const ChatListScreen = () => {
             }
             return chat;
           } catch (error) {
-            console.error(`Error fetching messages for user ${chat.other_user_id}:`, error);
+            console.error(
+              `Error fetching messages for user ${chat.other_user_id}:`,
+              error,
+            );
             return chat;
           }
-        })
+        }),
       );
-      
+
       setChats(chatsWithMessages);
     } catch (error) {
       console.error('Error loading chats:', error);
@@ -116,26 +122,31 @@ const ChatListScreen = () => {
 
   const handleChatPress = (userId: number) => {
     console.log('Opening chat with user ID:', userId);
-    navigation.navigate('ProviderChatScreen' as never, { 
-      user: {
-        id: userId,
-        name: `User ${userId}`, // Placeholder name until backend provides it
-        image_url: 'https://via.placeholder.com/50' // Placeholder image until backend provides it
-      } 
-    } as never);
+    navigation.navigate(
+      'ProviderChatScreen' as never,
+      {
+        user: {
+          id: userId,
+          name: `User ${userId}`, // Placeholder name until backend provides it
+          image_url: 'https://via.placeholder.com/50', // Placeholder image until backend provides it
+        },
+      } as never,
+    );
   };
 
-  const renderChatItem = ({ item }: { item: ChatPreview }) => (
+  const renderChatItem = ({item}: {item: ChatPreview}) => (
     <TouchableOpacity
       style={styles.chatItem}
       onPress={() => handleChatPress(item.other_user_id)}>
-      <Image 
-        source={{ uri: item.image_url || 'https://via.placeholder.com/50' }} 
-        style={styles.avatar} 
+      <Image
+        source={{uri: item.image_url || 'https://via.placeholder.com/50'}}
+        style={styles.avatar}
       />
       <View style={styles.chatInfo}>
         <View style={styles.chatHeader}>
-          <Text style={styles.name}>{item.name || `User ${item.other_user_id}`}</Text>
+          <Text style={styles.name}>
+            {item.name || `User ${item.other_user_id}`}
+          </Text>
           <Text style={styles.time}>
             {new Date(item.latest_message_sent).toLocaleDateString()}
           </Text>
@@ -290,4 +301,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ChatListScreen; 
+export default ChatListScreen;

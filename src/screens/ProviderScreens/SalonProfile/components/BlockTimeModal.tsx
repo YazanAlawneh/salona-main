@@ -14,10 +14,10 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import {useTranslation} from '../../../../contexts/TranslationContext';
 import {format, addDays} from 'date-fns';
 import {arSA} from 'date-fns/locale';
-import { useGetAvailabilityQuery } from '../../../../redux/api/salonApi';
-import { useSelector } from 'react-redux';
+import {useGetAvailabilityQuery} from '../../../../redux/api/salonApi';
+import {useSelector} from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RootState } from '../../../../redux/store';
+import {RootState} from '../../../../redux/store';
 interface BlockTimeModalProps {
   visible: boolean;
   onClose: () => void;
@@ -35,7 +35,9 @@ function to24Hour(timeStr: string): string {
   let [hours, minutes] = time.split(':').map(Number);
   if (modifier === 'PM' && hours !== 12) hours += 12;
   if (modifier === 'AM' && hours === 12) hours = 0;
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  return `${hours.toString().padStart(2, '0')}:${minutes
+    .toString()
+    .padStart(2, '0')}`;
 }
 
 const BlockTimeModal: React.FC<BlockTimeModalProps> = ({
@@ -48,38 +50,43 @@ const BlockTimeModal: React.FC<BlockTimeModalProps> = ({
   onSuccess,
 }) => {
   const {t, isRTL} = useTranslation();
-  const { user , token } = useSelector((state: RootState) => state.auth);
+  const {user, token} = useSelector((state: RootState) => state.auth);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedStart, setSelectedStart] = useState<string | null>(null);
   const [selectedEnd, setSelectedEnd] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Generate next 7 days for date picker
-  const dates = Array.from({ length: 7 }, (_, i) => {
+  const dates = Array.from({length: 7}, (_, i) => {
     const date = addDays(new Date(), i);
     return {
       date,
-      day: format(date, 'dd', { locale: isRTL ? arSA : undefined }),
-      label: format(date, 'EEEE', { locale: isRTL ? arSA : undefined }),
+      day: format(date, 'dd', {locale: isRTL ? arSA : undefined}),
+      label: format(date, 'EEEE', {locale: isRTL ? arSA : undefined}),
     };
   });
 
   // Fetch time slots for the selected date using the API
   const formattedDate = format(selectedDate, 'yyyy-MM-dd');
-  const { data: availabilityData, isLoading, error, refetch: refetchAvailability } = useGetAvailabilityQuery(
+  const {
+    data: availabilityData,
+    isLoading,
+    error,
+    refetch: refetchAvailability,
+  } = useGetAvailabilityQuery(
     {
       salonId,
       date: formattedDate,
     },
     {
       skip: !salonId,
-    }
+    },
   );
   console.log('[BlockTimeModal] Availability API response:', availabilityData);
 
   // Use periods from API response, map all valid slot strings
   const timeSlots = (availabilityData?.periods || [])
-    .map(slot => typeof slot.start === 'string' ? slot.start : '')
+    .map(slot => (typeof slot.start === 'string' ? slot.start : ''))
     .filter(slot => slot.length > 0);
 
   // Handle time slot selection for start only
@@ -90,7 +97,9 @@ const BlockTimeModal: React.FC<BlockTimeModalProps> = ({
     let endHour = startHour + 1;
     let endMinute = startMinute;
     if (endHour > 23) endHour = 23;
-    const endSlot = `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
+    const endSlot = `${endHour.toString().padStart(2, '0')}:${endMinute
+      .toString()
+      .padStart(2, '0')}`;
     // If the next slot exists in timeSlots, use it; otherwise, just add 1 hour
     setSelectedEnd(timeSlots.includes(endSlot) ? endSlot : endSlot);
   };
@@ -123,15 +132,18 @@ const BlockTimeModal: React.FC<BlockTimeModalProps> = ({
         end_time: to24Hour(endTime),
       };
       // API call
-      const response = await fetch('https://spa.dev2.prodevr.com/api/salons/block-time-period', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+      const response = await fetch(
+        'https://bella-glam.com/api/salons/block-time-period',
+        {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      });
+      );
       const result = await response.json();
       console.log('[BlockTimeModal] Block time API response:', {
         status: response.status,
@@ -180,20 +192,23 @@ const BlockTimeModal: React.FC<BlockTimeModalProps> = ({
                 <TouchableOpacity
                   style={[
                     styles.dateButton,
-                    selectedDate.getDate() === item.date.getDate() && styles.selectedDateButton,
+                    selectedDate.getDate() === item.date.getDate() &&
+                      styles.selectedDateButton,
                   ]}
                   onPress={() => setSelectedDate(item.date)}>
                   <Text
                     style={[
                       styles.dateText,
-                      selectedDate.getDate() === item.date.getDate() && styles.selectedDateText,
+                      selectedDate.getDate() === item.date.getDate() &&
+                        styles.selectedDateText,
                     ]}>
                     {item.day}
                   </Text>
                   <Text
                     style={[
                       styles.dayText,
-                      selectedDate.getDate() === item.date.getDate() && styles.selectedDateText,
+                      selectedDate.getDate() === item.date.getDate() &&
+                        styles.selectedDateText,
                     ]}>
                     {item.label}
                   </Text>
@@ -208,16 +223,25 @@ const BlockTimeModal: React.FC<BlockTimeModalProps> = ({
               {t.salonProfile.blockTime.selectSlots}
             </Text>
             {isLoading ? (
-              <ActivityIndicator size="small" color={Colors.gold} style={{ marginVertical: 20 }} />
+              <ActivityIndicator
+                size="small"
+                color={Colors.gold}
+                style={{marginVertical: 20}}
+              />
             ) : timeSlots.length === 0 ? (
-              <Text style={{ color: Colors.softGray, textAlign: 'center', marginVertical: 20 }}>
+              <Text
+                style={{
+                  color: Colors.softGray,
+                  textAlign: 'center',
+                  marginVertical: 20,
+                }}>
                 {t.salonProfile.blockTime.noAvailableTimeSlots}
               </Text>
             ) : (
               <View style={styles.slotButtonsContainer}>
                 {timeSlots.map(slot => {
                   const isSelected =
-                    (selectedStart === slot) || (selectedEnd === slot);
+                    selectedStart === slot || selectedEnd === slot;
                   return (
                     <TouchableOpacity
                       key={slot}
@@ -241,7 +265,10 @@ const BlockTimeModal: React.FC<BlockTimeModalProps> = ({
           </ScrollView>
 
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.cancelButton} onPress={onClose} disabled={isSubmitting}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={onClose}
+              disabled={isSubmitting}>
               <Text style={styles.cancelButtonText}>
                 {t.salonProfile.blockTime.cancel}
               </Text>
@@ -390,4 +417,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default BlockTimeModal; 
+export default BlockTimeModal;

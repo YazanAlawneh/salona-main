@@ -3,7 +3,7 @@
 
 // const sendLocationToBackend = async (latitude: number, longitude: number, token: string) => {
 //   try {
-//     await fetch('https://spa.dev2.prodevr.com/api/update-salon-address', {
+//     await fetch('https://bella-glam.com/api/update-salon-address', {
 //       method: 'POST',
 //       headers: {
 //         'Authorization': `Bearer ${token}`,
@@ -68,4 +68,4 @@
 //   } catch (e) {
 //     console.log('Error stopping background service:', e);
 //   }
-// }; 
+// };

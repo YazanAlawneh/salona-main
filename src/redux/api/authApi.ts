@@ -1,6 +1,6 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/query/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RootState } from '../store';
+import {RootState} from '../store';
 
 // Types
 interface LoginCredentials {
@@ -82,27 +82,30 @@ interface UserInfoResponse {
 }
 
 // Previous API URL (commented out)
-// const API_BASE_URL = 'https://spa.dev2.prodevr.com/api';
+// const API_BASE_URL = 'https://bella-glam.com/api';
 
 // New API URL
 const API_BASE_URL = 'https://bella-glam.com/api';
 
-const prepareHeaders = async (headers: Headers, { getState }: { getState: () => RootState }) => {
+const prepareHeaders = async (
+  headers: Headers,
+  {getState}: {getState: () => RootState},
+) => {
   // First try to get the token from Redux state
   const state = getState();
   const tokenFromRedux = state.auth.token;
-  
+
   // If token exists in Redux, use it
   if (tokenFromRedux) {
     headers.set('Authorization', `Bearer ${tokenFromRedux}`);
   } else {
     // Otherwise, try to get it from AsyncStorage
-  const token = await AsyncStorage.getItem('token');
-  if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+    const token = await AsyncStorage.getItem('token');
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
   }
-  }
-  
+
   // Always set Accept and Content-Type headers
   headers.set('Accept', 'application/json');
   headers.set('Content-Type', 'application/json');
@@ -114,7 +117,7 @@ export const authApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: API_BASE_URL,
     prepareHeaders,
-    responseHandler: async (response) => {
+    responseHandler: async response => {
       // First try to parse as JSON
       try {
         const data = await response.json();
@@ -122,23 +125,27 @@ export const authApi = createApi({
       } catch (err) {
         // If JSON parsing fails, get the text and log it
         const text = await response.text();
-        console.error('Server response was not JSON:', text.substring(0, 200) + '...');
+        console.error(
+          'Server response was not JSON:',
+          text.substring(0, 200) + '...',
+        );
         // Throw a more informative error
-        throw new Error('Server returned invalid JSON response. Status: ' + response.status);
+        throw new Error(
+          'Server returned invalid JSON response. Status: ' + response.status,
+        );
       }
     },
   }),
-  endpoints: (builder) => ({
+  endpoints: builder => ({
     register: builder.mutation<AuthResponse, RegisterData>({
-      
-      query: (userData) => ({
+      query: userData => ({
         url: '/register',
         method: 'POST',
         body: userData,
       }),
     }),
     verifyOtp: builder.mutation<AuthResponse, OtpData>({
-      query: (otpData) => ({
+      query: otpData => ({
         url: '/verify-otp',
         method: 'POST',
         body: otpData,
@@ -146,22 +153,22 @@ export const authApi = createApi({
       }),
     }),
     login: builder.mutation<AuthResponse, LoginCredentials>({
-      query: (credentials) => ({
+      query: credentials => ({
         url: '/login',
         method: 'POST',
         body: {
           ...credentials,
-          fcm_token: credentials.fcm_token || "dummy_fcm_token_123",
-          current_lang: credentials.current_lang || "en"
+          fcm_token: credentials.fcm_token || 'dummy_fcm_token_123',
+          current_lang: credentials.current_lang || 'en',
         },
       }),
       // Add transformErrorResponse to handle errors better
-      transformErrorResponse: (response: { status: number, data: any }) => {
+      transformErrorResponse: (response: {status: number; data: any}) => {
         if (response.status === 500) {
           return {
             status: response.status,
             message: 'Internal server error. Please try again later.',
-            data: null
+            data: null,
           };
         }
         return response;
@@ -174,21 +181,27 @@ export const authApi = createApi({
       }),
     }),
     updateUser: builder.mutation<AuthResponse, UpdateUserData>({
-      query: (userData) => ({
+      query: userData => ({
         url: '/update-user',
         method: 'POST',
         body: userData,
       }),
     }),
-    changePassword: builder.mutation<{ success: boolean; message: string }, ChangePasswordData>({
-      query: (passwordData) => ({
+    changePassword: builder.mutation<
+      {success: boolean; message: string},
+      ChangePasswordData
+    >({
+      query: passwordData => ({
         url: '/change-password',
         method: 'POST',
         body: passwordData,
       }),
     }),
-    resetPassword: builder.mutation<{ success: boolean; message: string }, ResetPasswordData>({
-      query: (passwordData) => ({
+    resetPassword: builder.mutation<
+      {success: boolean; message: string},
+      ResetPasswordData
+    >({
+      query: passwordData => ({
         url: '/reset-password',
         method: 'POST',
         body: passwordData,

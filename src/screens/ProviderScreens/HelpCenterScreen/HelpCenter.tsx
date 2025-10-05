@@ -18,7 +18,7 @@ import {useTranslation} from '../../../contexts/TranslationContext';
 import Icon from 'react-native-vector-icons/Ionicons';
 import styles from './HelpCenter.styles';
 import Colors from '../../../constants/Colors';
-import { useContactUsMutation } from '../../../redux/api/salonApi';
+import {useContactUsMutation} from '../../../redux/api/salonApi';
 
 const HelpCenter = () => {
   const navigation = useNavigation();
@@ -50,7 +50,7 @@ const HelpCenter = () => {
 
     try {
       console.log('=== PROVIDER CONTACT US API CALL STARTED ===');
-      console.log('Request URL:', 'https://spa.dev2.prodevr.com/api/new-contact-us');
+      console.log('Request URL:', 'https://bella-glam.com/api/new-contact-us');
       console.log('Request Body:', {
         email,
         note: message,
@@ -97,16 +97,16 @@ const HelpCenter = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.black} />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}>
-          <Icon 
-            name={isRTL ? "chevron-forward" : "chevron-back"} 
-            size={24} 
-            color={Colors.white} 
+          <Icon
+            name={isRTL ? 'chevron-forward' : 'chevron-back'}
+            size={24}
+            color={Colors.white}
           />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t.helpCenter.title}</Text>
@@ -116,19 +116,18 @@ const HelpCenter = () => {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}>
-        <ScrollView 
-          style={styles.content}
-          showsVerticalScrollIndicator={false}
-        >
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.contentContainer}>
             {/* Hero Section */}
             <View style={styles.heroSection}>
-              <Image 
-                source={require('../../../assets/images/help-center.png')} 
+              <Image
+                source={require('../../../assets/images/help-center.png')}
                 style={styles.heroImage}
                 resizeMode="contain"
               />
-              <Text style={styles.sectionTitle}>{t.helpCenter.howCanWeHelp}</Text>
+              <Text style={styles.sectionTitle}>
+                {t.helpCenter.howCanWeHelp}
+              </Text>
               <Text style={styles.sectionDescription}>
                 {t.helpCenter.helpCenterDescription}
               </Text>
@@ -139,7 +138,12 @@ const HelpCenter = () => {
               <View style={styles.formSection}>
                 <Text style={styles.label}>{t.helpCenter.email}</Text>
                 <View style={styles.inputContainer}>
-                  <Icon name="mail-outline" size={20} color={Colors.softGray} style={styles.inputIcon} />
+                  <Icon
+                    name="mail-outline"
+                    size={20}
+                    color={Colors.softGray}
+                    style={styles.inputIcon}
+                  />
                   <TextInput
                     style={styles.input}
                     value={email}
@@ -155,7 +159,12 @@ const HelpCenter = () => {
               <View style={styles.formSection}>
                 <Text style={styles.label}>{t.helpCenter.message}</Text>
                 <View style={styles.textAreaContainer}>
-                  <Icon name="chatbubble-outline" size={20} color={Colors.softGray} style={styles.textAreaIcon} />
+                  <Icon
+                    name="chatbubble-outline"
+                    size={20}
+                    color={Colors.softGray}
+                    style={styles.textAreaIcon}
+                  />
                   <TextInput
                     style={styles.textArea}
                     value={message}
@@ -179,8 +188,15 @@ const HelpCenter = () => {
                   <ActivityIndicator color={Colors.white} />
                 ) : (
                   <>
-                    <Text style={styles.submitButtonText}>{t.helpCenter.submit}</Text>
-                    <Icon name="send" size={18} color={Colors.black} style={styles.submitIcon} />
+                    <Text style={styles.submitButtonText}>
+                      {t.helpCenter.submit}
+                    </Text>
+                    <Icon
+                      name="send"
+                      size={18}
+                      color={Colors.black}
+                      style={styles.submitIcon}
+                    />
                   </>
                 )}
               </TouchableOpacity>
@@ -192,4 +208,4 @@ const HelpCenter = () => {
   );
 };
 
-export default HelpCenter; 
+export default HelpCenter;

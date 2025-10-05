@@ -1,5 +1,5 @@
-import { ref, onValue, push, set, get, getDatabase } from 'firebase/database';
-import { initializeApp } from 'firebase/app';
+import {ref, onValue, push, set, get, getDatabase} from 'firebase/database';
+import {initializeApp} from 'firebase/app';
 
 interface Message {
   message: string;
@@ -18,14 +18,14 @@ interface ChatPreview {
 }
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDKplQEnueX8njxb1Si1Zc7tLMn5mp-deM",
-  authDomain: "spa1-46f3d.firebaseapp.com",
-  databaseURL: "https://spa1-46f3d-default-rtdb.firebaseio.com",
-  projectId: "spa1-46f3d",
-  storageBucket: "spa1-46f3d.firebasestorage.app",
-  messagingSenderId: "218571464302",
-  appId: "1:218571464302:web:f501f4a1c6d6941e61907f",
-  measurementId: "G-XHCYGWWCKS"
+  apiKey: 'AIzaSyDKplQEnueX8njxb1Si1Zc7tLMn5mp-deM',
+  authDomain: 'spa1-46f3d.firebaseapp.com',
+  databaseURL: 'https://spa1-46f3d-default-rtdb.firebaseio.com',
+  projectId: 'spa1-46f3d',
+  storageBucket: 'spa1-46f3d.firebasestorage.app',
+  messagingSenderId: '218571464302',
+  appId: '1:218571464302:web:f501f4a1c6d6941e61907f',
+  measurementId: 'G-XHCYGWWCKS',
 };
 
 // Initialize Firebase
@@ -35,8 +35,8 @@ const database = getDatabase(app);
 class ChatService {
   private static instance: ChatService;
   // Previous API URL (commented out)
-  // private API_URL = 'https://spa.dev2.prodevr.com/api';
-  
+  // private API_URL = 'https://bella-glam.com/api';
+
   // New API URL
   private API_URL = 'https://bella-glam.com/api';
 
@@ -53,18 +53,22 @@ class ChatService {
 
   private getChatId(userId: number, providerId: number): string {
     // Format: smaller_id_larger_id to ensure consistency
-    return userId < providerId 
+    return userId < providerId
       ? `${userId}_${providerId}`
       : `${providerId}_${userId}`;
   }
 
   // Get list of available chats from Firebase
-  async getAvailableChats(providerId: number, isProvider: boolean, token: string): Promise<ChatPreview[]> {
+  async getAvailableChats(
+    providerId: number,
+    isProvider: boolean,
+    token: string,
+  ): Promise<ChatPreview[]> {
     try {
       console.log('Fetching chats for provider:', providerId);
       const chatsRef = ref(database, 'chats');
       const snapshot = await get(chatsRef);
-      
+
       if (!snapshot.exists()) {
         console.log('No chats found in Firebase');
         return [];
@@ -76,28 +80,32 @@ class ChatService {
       // Iterate through all chats
       for (const chatId in allChats) {
         const [id1, id2] = chatId.split('_').map(Number);
-        
+
         // Only include chats where the provider is a participant
         if (id1 === providerId || id2 === providerId) {
           const otherUserId = id1 === providerId ? id2 : id1;
           const messages = Object.values(allChats[chatId]);
-          
+
           // Sort messages by time to get the latest
-          const sortedMessages = messages.sort((a: any, b: any) => 
-            new Date(b.time).getTime() - new Date(a.time).getTime()
+          const sortedMessages = messages.sort(
+            (a: any, b: any) =>
+              new Date(b.time).getTime() - new Date(a.time).getTime(),
           );
-          
+
           if (sortedMessages.length > 0) {
             const lastMessage = sortedMessages[0] as Message;
-            
+
             // Get user details from your API
             try {
-              const userResponse = await fetch(`${this.API_URL}/users/${otherUserId}`, {
-                headers: {
-                  'Authorization': `Bearer ${token}`,
-                }
-              });
-              
+              const userResponse = await fetch(
+                `${this.API_URL}/users/${otherUserId}`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                },
+              );
+
               if (userResponse.ok) {
                 const userData = await userResponse.json();
                 chats.push({
@@ -106,7 +114,7 @@ class ChatService {
                   image_url: userData.image_url || '',
                   last_message: lastMessage.message,
                   last_message_time: lastMessage.time,
-                  unread_count: 0 // You can implement unread count logic if needed
+                  unread_count: 0, // You can implement unread count logic if needed
                 });
               }
             } catch (error) {
@@ -118,7 +126,7 @@ class ChatService {
                 image_url: '',
                 last_message: lastMessage.message,
                 last_message_time: lastMessage.time,
-                unread_count: 0
+                unread_count: 0,
               });
             }
           }
@@ -134,36 +142,52 @@ class ChatService {
   }
 
   // Subscribe to messages for a specific chat
-  subscribeToMessages(userId: number, otherId: number, callback: (messages: Message[]) => void): () => void {
+  subscribeToMessages(
+    userId: number,
+    otherId: number,
+    callback: (messages: Message[]) => void,
+  ): () => void {
     const chatId = this.getChatId(userId, otherId);
     const chatRef = ref(database, `chats/${chatId}`);
-    
+
     console.log('Subscribing to chat:', chatId);
 
-    const unsubscribe = onValue(chatRef, (snapshot) => {
-      const messages: Message[] = [];
-      if (snapshot.exists()) {
-        snapshot.forEach((childSnapshot) => {
-          const message = childSnapshot.val();
-          messages.push(message);
-        });
-        
-        // Sort messages by time
-        messages.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
-      }
-      
-      callback(messages);
-    }, (error) => {
-      console.error('Error subscribing to messages:', error);
-    });
+    const unsubscribe = onValue(
+      chatRef,
+      snapshot => {
+        const messages: Message[] = [];
+        if (snapshot.exists()) {
+          snapshot.forEach(childSnapshot => {
+            const message = childSnapshot.val();
+            messages.push(message);
+          });
+
+          // Sort messages by time
+          messages.sort(
+            (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
+          );
+        }
+
+        callback(messages);
+      },
+      error => {
+        console.error('Error subscribing to messages:', error);
+      },
+    );
 
     return unsubscribe;
   }
 
   // Send message and store in Firebase
-  async sendMessage(message: string, receiverId: number, token: string, senderId: number, isProvider: boolean = false): Promise<boolean> {
+  async sendMessage(
+    message: string,
+    receiverId: number,
+    token: string,
+    senderId: number,
+    isProvider: boolean = false,
+  ): Promise<boolean> {
     try {
-      console.log('Sending message:', { message, receiverId, senderId });
+      console.log('Sending message:', {message, receiverId, senderId});
 
       // Store in Firebase
       const chatId = this.getChatId(senderId, receiverId);
@@ -189,12 +213,15 @@ class ChatService {
         await fetch(`${this.API_URL}/messages`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
           body: formData,
         });
       } catch (apiError) {
-        console.error('Error sending message through API (but stored in Firebase):', apiError);
+        console.error(
+          'Error sending message through API (but stored in Firebase):',
+          apiError,
+        );
       }
 
       return true;
@@ -205,27 +232,34 @@ class ChatService {
   }
 
   // Get messages for a specific chat from Firebase
-  async getMessages(userId: number, otherId: number, isProvider: boolean, token: string): Promise<Message[]> {
+  async getMessages(
+    userId: number,
+    otherId: number,
+    isProvider: boolean,
+    token: string,
+  ): Promise<Message[]> {
     try {
       console.log('Getting messages from Firebase for chat:', userId, otherId);
       const chatId = this.getChatId(userId, otherId);
       const chatRef = ref(database, `chats/${chatId}`);
       const snapshot = await get(chatRef);
-      
+
       if (!snapshot.exists()) {
         console.log('No messages found in Firebase for chat:', chatId);
         return [];
       }
 
       const messages: Message[] = [];
-      snapshot.forEach((childSnapshot) => {
+      snapshot.forEach(childSnapshot => {
         const message = childSnapshot.val();
         messages.push(message);
       });
-      
+
       // Sort messages by time
-      messages.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
-      
+      messages.sort(
+        (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
+      );
+
       console.log('Found messages in Firebase:', messages.length);
       return messages;
     } catch (error) {
@@ -235,4 +269,4 @@ class ChatService {
   }
 }
 
-export default ChatService.getInstance(); 
+export default ChatService.getInstance();

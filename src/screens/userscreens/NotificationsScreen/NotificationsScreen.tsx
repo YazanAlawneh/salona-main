@@ -20,7 +20,6 @@ import Footer from '../../../components/Footer/Footer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import styles from './NotificationsScreen.styles';
 
-
 interface Notification {
   id: number;
   user_id: number;
@@ -84,7 +83,8 @@ const NotificationsScreen: React.FC = () => {
           throw new Error(t.notifications.errors.noToken);
         }
 
-        const apiUrl = `https://spa.dev2.prodevr.com/api/notifications?per_page=${perPage}&page=${page}`;
+        const apiUrl = `https://bella-glam.com/api/notifications?per_page=${perPage}&page=${page}`;
+        // const apiUrl = `https://bella-glam.com/api/notifications?per_page=${perPage}&page=${page}`;
 
         // Fetch notifications from the API
         const response = await fetch(apiUrl, {

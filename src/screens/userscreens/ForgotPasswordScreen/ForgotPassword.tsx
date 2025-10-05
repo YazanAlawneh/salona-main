@@ -1,14 +1,21 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, Modal, TextInput } from 'react-native';
+import React, {useState} from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Alert,
+  Modal,
+  TextInput,
+} from 'react-native';
 import CustomButton from '../../../components/CustomButton/CustomButton';
 import CustomInput from '../../../components/CustomInput/CustomInput';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import styles from './ForgotPassword.styles';
 import Colors from '../../../constants/Colors';
-import { useTranslation } from '../../../contexts/TranslationContext';
+import {useTranslation} from '../../../contexts/TranslationContext';
 
-const ForgotPasswordScreen = ({ navigation }: { navigation: any }) => {
-  const { t } = useTranslation();
+const ForgotPasswordScreen = ({navigation}: {navigation: any}) => {
+  const {t} = useTranslation();
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [showOtpModal, setShowOtpModal] = useState(false);
@@ -23,17 +30,23 @@ const ForgotPasswordScreen = ({ navigation }: { navigation: any }) => {
   const handleConfirm = async () => {
     try {
       setIsLoading(true);
-      console.log('Attempting to send forgot password request for email:', email);
+      console.log(
+        'Attempting to send forgot password request for email:',
+        email,
+      );
       const formData = new FormData();
       formData.append('email', email);
 
-      const response = await fetch('https://spa.dev2.prodevr.com/api/forgot-password', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
+      const response = await fetch(
+        'https://bella-glam.com/api/forgot-password',
+        {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+          },
+          body: formData,
         },
-        body: formData,
-      });
+      );
 
       const data = await response.json();
       console.log('API Response:', data);
@@ -59,25 +72,28 @@ const ForgotPasswordScreen = ({ navigation }: { navigation: any }) => {
       setIsVerifying(true);
       console.log('Starting OTP verification with code:', otp);
       console.log('Using user_id:', userId);
-      
+
       const requestBody = {
         user_id: userId,
-        otpcode: otp
+        otpcode: otp,
       };
-      
+
       console.log('Request Body:', JSON.stringify(requestBody, null, 2));
-      
-      const response = await fetch('https://spa.dev2.prodevr.com/api/otp', {
+
+      const response = await fetch('https://bella-glam.com/api/otp', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
       console.log('OTP Verification Response Status:', response.status);
-      console.log('OTP Verification Response Data:', JSON.stringify(data, null, 2));
+      console.log(
+        'OTP Verification Response Data:',
+        JSON.stringify(data, null, 2),
+      );
 
       if (response.ok) {
         console.log('OTP verification successful');
@@ -99,27 +115,36 @@ const ForgotPasswordScreen = ({ navigation }: { navigation: any }) => {
     try {
       setIsResetting(true);
       console.log('Resetting password for user:', userId);
-      
+
       const requestBody = {
         user_id: userId,
         password: password,
-        password_confirmation: passwordConfirmation
+        password_confirmation: passwordConfirmation,
       };
-      
-      console.log('Reset Password Request Body:', JSON.stringify(requestBody, null, 2));
-      
-      const response = await fetch('https://spa.dev2.prodevr.com/api/reset-password', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
+
+      console.log(
+        'Reset Password Request Body:',
+        JSON.stringify(requestBody, null, 2),
+      );
+
+      const response = await fetch(
+        'https://bella-glam.com/api/reset-password',
+        {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
         },
-        body: JSON.stringify(requestBody)
-      });
+      );
 
       const data = await response.json();
       console.log('Reset Password Response Status:', response.status);
-      console.log('Reset Password Response Data:', JSON.stringify(data, null, 2));
+      console.log(
+        'Reset Password Response Data:',
+        JSON.stringify(data, null, 2),
+      );
 
       if (response.ok) {
         console.log('Password reset successful');
@@ -150,9 +175,7 @@ const ForgotPasswordScreen = ({ navigation }: { navigation: any }) => {
         <Text style={styles.title}>{t.forgotPassword.title}</Text>
       </View>
       <View style={styles.secondSection}>
-        <Text style={styles.instructions}>
-          {t.forgotPassword.instructions}
-        </Text>
+        <Text style={styles.instructions}>{t.forgotPassword.instructions}</Text>
 
         <CustomInput
           label={t.forgotPassword.label}
@@ -176,15 +199,14 @@ const ForgotPasswordScreen = ({ navigation }: { navigation: any }) => {
         visible={showOtpModal}
         transparent={true}
         animationType="slide"
-        onRequestClose={() => setShowOtpModal(false)}
-      >
+        onRequestClose={() => setShowOtpModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{t.forgotPassword.otpTitle}</Text>
             <Text style={styles.modalSubtitle}>
               {t.forgotPassword.otpSubtitle}
             </Text>
-            
+
             <TextInput
               style={styles.otpInput}
               placeholder={t.forgotPassword.otpPlaceholder}
@@ -223,15 +245,16 @@ const ForgotPasswordScreen = ({ navigation }: { navigation: any }) => {
         visible={showPasswordModal}
         transparent={true}
         animationType="slide"
-        onRequestClose={() => setShowPasswordModal(false)}
-      >
+        onRequestClose={() => setShowPasswordModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{t.forgotPassword.resetPasswordTitle}</Text>
+            <Text style={styles.modalTitle}>
+              {t.forgotPassword.resetPasswordTitle}
+            </Text>
             <Text style={styles.modalSubtitle}>
               {t.forgotPassword.resetPasswordSubtitle}
             </Text>
-            
+
             <TextInput
               style={styles.otpInput}
               placeholder={t.forgotPassword.newPasswordPlaceholder}
@@ -243,7 +266,7 @@ const ForgotPasswordScreen = ({ navigation }: { navigation: any }) => {
             />
 
             <TextInput
-              style={[styles.otpInput, { marginTop: 10 }]}
+              style={[styles.otpInput, {marginTop: 10}]}
               placeholder={t.forgotPassword.confirmPasswordPlaceholder}
               placeholderTextColor={Colors.softGray}
               secureTextEntry

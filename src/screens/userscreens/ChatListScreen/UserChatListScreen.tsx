@@ -65,11 +65,11 @@ const UserChatListScreen = () => {
       console.log('User ID:', user.id);
       console.log('Fetching chats for user:', user.id);
       setLoading(true);
-      
+
       // First try to get chats from Firebase
       const availableChats = await chatService.getAvailableChats(user.id, false, token);
       console.log('Found chats:', availableChats.length);
-      
+
       if (availableChats.length > 0) {
         console.log('Chats loaded from Firebase:', availableChats);
         // Map Firebase chat format to our ChatPreview format
@@ -86,39 +86,39 @@ const UserChatListScreen = () => {
         setLoading(false);
         return;
       }
-      
+
       // If no chats from Firebase, try the API
       console.log('No chats from Firebase, trying API');
-      const response = await fetch('https://spa.dev2.prodevr.com/api/get-chats', {
+      const response = await fetch('https://bella-glam.com/api/get-chats', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
-      
+
       if (!response.ok) {
         throw new Error(`API error: ${response.status}`);
       }
-      
+
       const data = await response.json();
       console.log('Raw API Response from get-chats:', JSON.stringify(data, null, 2));
-      
+
       // Make sure we have an array of chats
       const chatArray = Array.isArray(data) ? data : [];
       console.log('Number of chats from API:', chatArray.length);
-      
+
       // Fetch the latest message for each chat
       const chatsWithMessages = await Promise.all(
         chatArray.map(async (chat) => {
           try {
             console.log(`Fetching messages for user ${chat.other_user_id}`);
-            const messageResponse = await fetch(`https://spa.dev2.prodevr.com/api/get-messages/${chat.other_user_id}`, {
+            const messageResponse = await fetch(`https://bella-glam.com/api/get-messages/${chat.other_user_id}`, {
               method: 'GET',
               headers: {
                 'Authorization': `Bearer ${token}`,
               },
             });
-            
+
             if (messageResponse.ok) {
               const messages = await messageResponse.json();
               console.log(`Messages API Response for user ${chat.other_user_id}:`, JSON.stringify(messages, null, 2));
@@ -138,7 +138,7 @@ const UserChatListScreen = () => {
           }
         })
       );
-      
+
       console.log('Final chats with messages:', JSON.stringify(chatsWithMessages, null, 2));
       setChats(chatsWithMessages);
     } catch (error) {
@@ -151,19 +151,19 @@ const UserChatListScreen = () => {
 
   const handleChatPress = (chat: ChatPreview) => {
     console.log('Opening chat with user:', chat.other_user);
-    navigation.navigate('ChatScreen', { 
+    navigation.navigate('ChatScreen', {
       user: {
         id: chat.other_user_id,
         name: chat.other_user?.name || `User ${chat.other_user_id}`,
         image_url: chat.other_user?.image_url || chat.other_user?.avatar
-      } 
+      }
     });
   };
 
   const renderChatItem = ({item}: {item: ChatPreview}) => {
     // Get the fallback image
     const fallbackImage = require('../../../assets/images/beautician1.png');
-    
+
     // Determine the image source
     const imageSource = item.other_user?.image_url || item.other_user?.avatar
       ? { uri: item.other_user.image_url || item.other_user.avatar }
@@ -173,9 +173,9 @@ const UserChatListScreen = () => {
       <TouchableOpacity
         style={styles.chatItem}
         onPress={() => handleChatPress(item)}>
-        <Image 
+        <Image
           source={imageSource}
-          style={styles.avatar} 
+          style={styles.avatar}
         />
         <View style={styles.chatInfo}>
           <View style={styles.chatHeader}>
@@ -328,4 +328,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default UserChatListScreen; 
+export default UserChatListScreen;

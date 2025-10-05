@@ -37,7 +37,7 @@ export interface NearbySalon {
 
 // API Configuration
 // Previous API URL (commented out)
-// const API_BASE_URL = 'https://spa.dev2.prodevr.com/api';
+// const API_BASE_URL = 'https://bella-glam.com/api';
 
 // New API URL
 const API_BASE_URL = 'https://bella-glam.com/api';
@@ -120,7 +120,14 @@ export const salonApi = createApi({
     baseUrl: API_BASE_URL,
     prepareHeaders,
   }),
-  tagTypes: ['Salon', 'Appointments', 'Service', 'Address', 'Category', 'Package'],
+  tagTypes: [
+    'Salon',
+    'Appointments',
+    'Service',
+    'Address',
+    'Category',
+    'Package',
+  ],
   endpoints: builder => ({
     getSalonById: builder.query<SalonResponse, number>({
       query: id => `salons/${id}`,
@@ -141,20 +148,20 @@ export const salonApi = createApi({
     }),
     // Get salons by category id
     getCategorySalons: builder.query<SalonResponse, number | string>({
-      query: (categoryId) => ({
+      query: categoryId => ({
         url: `category/${categoryId}/salons`,
         method: 'GET',
       }),
       transformResponse: (response: any) => {
         // Normalize to SalonResponse shape
         if (Array.isArray(response?.salons)) {
-          return { salons: response.salons } as SalonResponse;
+          return {salons: response.salons} as SalonResponse;
         }
         // Some endpoints might return the array directly
         if (Array.isArray(response)) {
-          return { salons: response } as SalonResponse;
+          return {salons: response} as SalonResponse;
         }
-        return { salons: [] } as SalonResponse;
+        return {salons: []} as SalonResponse;
       },
       providesTags: ['Salon'],
     }),

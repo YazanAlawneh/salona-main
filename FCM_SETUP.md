@@ -32,7 +32,7 @@ The app automatically sends the FCM token to your backend when:
 The token is sent to the following endpoint:
 
 ```
-POST https://spa.dev2.prodevr.com/api/users/fcm-token
+POST https://bella-glam.com/api/users/fcm-token
 ```
 
 With the following request body:
@@ -64,7 +64,7 @@ const admin = require('firebase-admin');
 const serviceAccount = require('./path-to-your-service-account.json');
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.cert(serviceAccount),
 });
 
 // Send a notification to a specific user
@@ -93,13 +93,14 @@ sendNotification(
   'USER_FCM_TOKEN',
   'Appointment Confirmed',
   'Your appointment has been confirmed for tomorrow at 2:00 PM',
-  { appointmentId: '123', type: 'appointment_confirmation' }
+  {appointmentId: '123', type: 'appointment_confirmation'},
 );
 ```
 
 ## Important Notes
 
 1. **Token Changes**: FCM tokens can change over time. The app handles this by:
+
    - Storing the token in local storage
    - Listening for token refresh events
    - Sending the new token to your backend when it changes
@@ -126,4 +127,4 @@ If you're having issues with FCM:
 
 - [Firebase Cloud Messaging Documentation](https://firebase.google.com/docs/cloud-messaging)
 - [Firebase Admin SDK Documentation](https://firebase.google.com/docs/admin/setup)
-- [FCM HTTP v1 API](https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages) 
+- [FCM HTTP v1 API](https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages)
