@@ -16,6 +16,7 @@ import {
   Pressable,
   Touchable,
   Linking,
+  Dimensions,
 } from 'react-native';
 // import Icon from 'react-native-vector-icons/MaterialIcons';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -52,7 +53,7 @@ import {GOOGLE_MAPS_API_KEY} from '@env';
 import SearchBarWithMenu from '../../../components/SearchBarWithMenu/SearchBarWithMenu';
 import {Address} from '../../userscreens/EditLocation/types';
 import DeliveryLocationSheet from './components/DeliveryLocatioinSheet';
-import Swiper from 'react-native-swiper';
+// Removed unused Swiper import
 import {SafeAreaView} from 'react-native-safe-area-context';
 
 interface ExtendedSalon extends Salon {
@@ -172,6 +173,9 @@ const HomeScreen: React.FC = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   const dispatch = useDispatch();
   const {t, isRTL} = useTranslation();
+  const screenWidth = Dimensions.get('window').width;
+  const adsListRef = useRef<FlatList<any>>(null);
+  const [activeAdIndex, setActiveAdIndex] = useState(0);
 
   // Debug translation loading
   console.log('HomeScreen - Translation loaded:', {
@@ -271,6 +275,24 @@ const HomeScreen: React.FC = () => {
     adsLoading,
     categoriesLoading,
   });
+
+  // Auto-advance ads pager
+  useEffect(() => {
+    if (!ads || ads.length <= 1) {
+      return;
+    }
+    const intervalId = setInterval(() => {
+      try {
+        const nextIndex = (activeAdIndex + 1) % ads.length;
+        adsListRef.current?.scrollToIndex({index: nextIndex, animated: true});
+        setActiveAdIndex(nextIndex);
+      } catch (e) {
+        // ignore scroll errors
+      }
+    }, 4000);
+
+    return () => clearInterval(intervalId);
+  }, [ads, activeAdIndex]);
 
   const handleLocationPermissionAllow = async () => {
     setShowLocationPermissionModal(false);
@@ -722,7 +744,7 @@ const HomeScreen: React.FC = () => {
       }
     };
     return (
-      <TouchableOpacity style={styles.packageContainer} activeOpacity={0.85} onPress={handlePress}>
+      <TouchableOpacity style={[styles.packageContainer, {width: screenWidth}]} activeOpacity={0.85} onPress={handlePress}>
         <View style={styles.packageCard}>
           <View style={styles.packageImageContainer}>
             <Image source={imageSource} style={styles.packageImage} resizeMode="cover" />
@@ -956,7 +978,8 @@ const HomeScreen: React.FC = () => {
                     data={[1, 2, 3]} // Show 3 skeleton items
                     keyExtractor={item => `skeleton-${item}`}
                     renderItem={() => (
-                      <View style={styles.packageContainer}>
+                      <View style={[styles.packageContainer, {width: screenWidth}]}
+                      >
                         <View style={styles.packageCard}>
                           <View style={styles.packageImageContainer}>
                             <View style={styles.skeletonImage} />
@@ -974,16 +997,18 @@ const HomeScreen: React.FC = () => {
                     maxToRenderPerBatch={3}
                     windowSize={5}
                     initialNumToRender={2}
+                    pagingEnabled
                     getItemLayout={(data, index) => ({
-                      length: 296,
-                      offset: 296 * index,
+                      length: screenWidth,
+                      offset: screenWidth * index,
                       index,
                     })}
                   />
                 ) : ads.length > 0 ? (
                   <FlatList
+                    ref={adsListRef}
                     data={ads}
-                    contentContainerStyle={{paddingHorizontal: 4}}
+                    contentContainerStyle={{}}
                     keyExtractor={item => `ad-${item.id}`}
                     renderItem={renderAdItem}
                     horizontal
@@ -991,10 +1016,17 @@ const HomeScreen: React.FC = () => {
                     removeClippedSubviews={true}
                     maxToRenderPerBatch={3}
                     windowSize={5}
-                    initialNumToRender={2}
+                    initialNumToRender={1}
+                    pagingEnabled
+                    onMomentumScrollEnd={e => {
+                      const index = Math.round(
+                        e.nativeEvent.contentOffset.x / screenWidth,
+                      );
+                      setActiveAdIndex(index);
+                    }}
                     getItemLayout={(data, index) => ({
-                      length: 296, // 280 width + 16 margin
-                      offset: 296 * index,
+                      length: screenWidth,
+                      offset: screenWidth * index,
                       index,
                     })}
                   />
@@ -1041,8 +1073,7 @@ const HomeScreen: React.FC = () => {
                 <Text style={styles.sectionTitle}>{t.home.ourCategories}</Text>
                 <ScrollView
                   horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.horizontalScrollContent}>
+                  showsHorizontalScrollIndicator={false}>
                   {categories.length > 0 ? (
                     categories.map(category => (
                       <TouchableOpacity
