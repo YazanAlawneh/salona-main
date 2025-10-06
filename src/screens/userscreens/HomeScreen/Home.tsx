@@ -596,7 +596,7 @@ const HomeScreen: React.FC = () => {
     if (userAddresses.length > 0 && !selectedAddress) {
       const primaryAddress = userAddresses.find(addr => addr.is_primary === 1);
       if (primaryAddress) {
-        dispatch(setSelectedAddress(primaryAddress));
+        dispatch(setSelectedAddress(primaryAddress as unknown as Address));
       }
     }
   }, [userAddresses, selectedAddress, dispatch]);
@@ -709,19 +709,16 @@ const HomeScreen: React.FC = () => {
       : require('../../../assets/images/prettyLogo.png');
     const handlePress = async () => {
       try {
-        const rawUrl = (item?.url || '').trim();
+        const rawUrl = String(item?.url || '').trim();
         if (!rawUrl) {
           return;
         }
-        const normalizedUrl = /^https?:\/\//i.test(rawUrl)
-          ? rawUrl
-          : `https://${rawUrl}`;
-        const supported = await Linking.canOpenURL(normalizedUrl);
-        if (supported) {
-          await Linking.openURL(normalizedUrl);
-        }
+        const withScheme = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
+        const safeUrl = encodeURI(withScheme);
+        // Try opening directly; http/https should generally work
+        await Linking.openURL(safeUrl);
       } catch (e) {
-        console.log('Failed to open ad url', e);
+        console.log('Failed to open ad url', { url: item?.url, error: e });
       }
     };
     return (
