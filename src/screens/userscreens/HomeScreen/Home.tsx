@@ -300,14 +300,14 @@ const HomeScreen: React.FC = () => {
 
     try {
       console.log('🔍 [DEBUG] [HomeScreen] Requesting location permission...');
-      
+
       // For Android, request location permission
       if (Platform.OS === 'android') {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         );
         console.log('🔍 [DEBUG] [HomeScreen] Android permission result:', granted);
-        
+
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
           console.log('✅ [DEBUG] [HomeScreen] Android permission granted, getting location...');
           await getCurrentLocation();
@@ -329,7 +329,7 @@ const HomeScreen: React.FC = () => {
   const getCurrentLocation = async () => {
     try {
       console.log('🔍 [DEBUG] [HomeScreen] Getting current location...');
-      
+
       // Try Google Geolocation API first (more reliable)
       const response = await fetch(
         `https://www.googleapis.com/geolocation/v1/geolocate?key=${GOOGLE_MAPS_API_KEY}`,
@@ -363,7 +363,7 @@ const HomeScreen: React.FC = () => {
     // Fallback to native geolocation
     try {
       const Geolocation = require('@react-native-community/geolocation');
-      
+
       return new Promise<void>((resolve, reject) => {
         Geolocation.getCurrentPosition(
           (position: any) => {
@@ -418,7 +418,7 @@ const HomeScreen: React.FC = () => {
   const handleCurrentLocationSelect = useCallback(
     async (locationData: any) => {
       console.log('🔍 [DEBUG] [HomeScreen] Current location selected:', locationData);
-      
+
       if (locationData) {
         // Use the location data passed from the sheet
         const currentLocationAddress = {
@@ -576,7 +576,7 @@ const HomeScreen: React.FC = () => {
     const checkLocationPermission = async () => {
       try {
         console.log('🔍 [DEBUG] [HomeScreen] Checking location permission...');
-        
+
         // Check if location permission is already granted
         if (Platform.OS === 'ios') {
           // For iOS, try to get location directly first
@@ -593,7 +593,7 @@ const HomeScreen: React.FC = () => {
             PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           );
           console.log('🔍 [DEBUG] [HomeScreen] Android permission status:', granted);
-          
+
           if (granted) {
             console.log('✅ [DEBUG] [HomeScreen] Android permission already granted, getting location...');
             await getCurrentLocation();
@@ -630,21 +630,21 @@ const HomeScreen: React.FC = () => {
         try {
           console.log('🔍 [DEBUG] [HomeScreen] No addresses found, creating from current location...');
           console.log('🔍 [DEBUG] [HomeScreen] Current location:', currentLocation);
-          
+
           // Get address from coordinates
           const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentLocation.lat},${currentLocation.lng}&key=${GOOGLE_MAPS_API_KEY}`;
           console.log('🔍 [DEBUG] [HomeScreen] Geocoding URL:', geocodeUrl);
-          
+
           const geocodeResponse = await fetch(geocodeUrl);
           console.log('🔍 [DEBUG] [HomeScreen] Geocoding response status:', geocodeResponse.status);
-          
+
           const geocodeData = await geocodeResponse.json();
           console.log('🔍 [DEBUG] [HomeScreen] Geocoding response data:', geocodeData);
 
           if (geocodeData.results && geocodeData.results[0]) {
             const addressDescription = geocodeData.results[0].formatted_address;
             console.log('✅ [DEBUG] [HomeScreen] Found address:', addressDescription);
-            
+
             await createAddress({
               description: addressDescription,
               is_favorite: false,
@@ -652,7 +652,7 @@ const HomeScreen: React.FC = () => {
               longitude: currentLocation.lng.toString(),
             });
             console.log('✅ [DEBUG] [HomeScreen] Address created successfully');
-            
+
             // Refetch addresses to get the new one
             refetchAddresses();
           } else {
@@ -671,7 +671,7 @@ const HomeScreen: React.FC = () => {
   const mappedSalons = useMemo(() => {
     console.log('🔍 [DEBUG] [HomeScreen] Mapping nearby salons...');
     console.log('🔍 [DEBUG] [HomeScreen] Nearby salons to map:', nearbySalons);
-    
+
     return nearbySalons.map((salon: any, index): MappedSalon => {
       console.log(`🔍 [DEBUG] [HomeScreen] Processing salon ${index + 1}/${nearbySalons.length}:`, salon.name);
       console.log(`🔍 [DEBUG] [HomeScreen] Salon data:`, {
@@ -682,7 +682,7 @@ const HomeScreen: React.FC = () => {
         image_url: salon.image_url,
         average_rating: salon.average_rating
       });
-      
+
       // Normalize and safely format distance
       const rawDistance = salon.distance as unknown;
       const numericDistance =
@@ -710,7 +710,7 @@ const HomeScreen: React.FC = () => {
         time: salon.estimated_arrival_time || salon.travelTime || undefined,
         rating: salon.average_rating || '0.0',
       };
-      
+
       console.log(`✅ [DEBUG] [HomeScreen] Mapped salon ${salon.name}:`, mappedSalon);
       return mappedSalon;
     });
@@ -743,29 +743,118 @@ const HomeScreen: React.FC = () => {
         console.log('Failed to open ad url', { url: item?.url, error: e });
       }
     };
+    const cardHorizontalGutter = 16;
+    const cardWidth = screenWidth - cardHorizontalGutter * 2;
     return (
-      <TouchableOpacity style={[styles.packageContainer, {width: screenWidth}]} activeOpacity={0.85} onPress={handlePress}>
-        <View style={styles.packageCard}>
-          <View style={styles.packageImageContainer}>
-            <Image source={imageSource} style={styles.packageImage} resizeMode="cover" />
-            <View style={styles.packageGradient} />
-            <View style={styles.packageContent}>
-              <View style={styles.packageHeader}>
-                <Text style={styles.packageTitle} numberOfLines={2}>
-                  {item.title || ''}
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={handlePress}
+        style={{width: screenWidth}}
+      >
+        <View
+          style={{
+            marginHorizontal: cardHorizontalGutter,
+            marginTop: 8,
+            marginBottom: 4,
+            borderRadius: 16,
+            overflow: 'hidden',
+            height: 160,
+            backgroundColor: '#FFEFE9',
+          }}
+        >
+          {/* Right image */}
+          <Image
+            source={imageSource}
+            resizeMode="cover"
+            style={{
+              position: 'absolute',
+              right: 0,
+              top: 0,
+              bottom: 0,
+              width:screenWidth,
+            }}
+          />
+          {/* Soft gradient overlay for readability */}
+           <View
+            style={{
+              position: 'absolute',
+              right: 0,
+              top: 0,
+              bottom: 0,
+              width: Math.floor(cardWidth ),
+              backgroundColor: 'rgba(145,145,145,0.35)',
+            }}
+          />
+
+          {/* Content */}
+          <View style={{flex: 1, padding: 16, paddingRight: 12}}>
+            {/* Badge */}
+            {/* {item.badge ? (
+              <View
+                style={{
+                  alignSelf: 'flex-start',
+                  backgroundColor: '#FF6B6B',
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                  borderRadius: 12,
+                  marginBottom: 8,
+                }}
+              >
+                <Text style={{color: '#fff', fontSize: 11, fontWeight: '600'}}>
+                  {item.badge}
                 </Text>
               </View>
-              {item.description ? (
-                <View style={styles.packageDetails}>
-                  <View style={styles.detailItem}>
-                    <Icon name="information-circle-outline" size={14} color={Colors.black} />
-                    <Text style={styles.detailText} numberOfLines={1}>
-                      {item.description}
-                    </Text>
-                  </View>
-                </View>
-              ) : null}
-            </View>
+            ) : null} */}
+
+            <Text
+              numberOfLines={1}
+              style={{
+                position: "absolute",
+                bottom :40,
+                left : 8 ,
+                color:"#000",
+                fontSize: 18,
+                fontWeight: '900',
+                textShadowColor : "#000",
+                maxWidth: Math.floor(cardWidth * 0.6),
+                lineHeight: 24,
+              }}
+            >
+              {item.title || ''}
+            </Text>
+
+            {item.description ? (
+              <Text
+                numberOfLines={2}
+                style={{
+                  position : "absolute",
+                  bottom: 24,
+                  left: 8 ,
+                  color: '#5A5A5A',
+                  fontSize: 13,
+                  maxWidth: Math.floor(cardWidth * 0.62),
+                }}
+              >
+                {item.description}
+              </Text>
+            ) : null}
+
+            {/* CTA */}
+            {/* <View style={{flex: 1}} />
+            {/* <View style={{flexDirection: 'row'}}>
+              <View
+                style={{
+                  backgroundColor: Colors.gold,
+                  paddingHorizontal: 14,
+                  paddingVertical: 8,
+                  borderRadius: 12,
+                }}
+              >
+                <Text style={{color: '#111', fontWeight: '700', fontSize: 12}}>
+                  {item.cta_text || 'Shop Now'}
+                </Text>
+              </View>
+            </View> */}
           </View>
         </View>
       </TouchableOpacity>
