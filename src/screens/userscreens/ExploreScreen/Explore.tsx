@@ -312,15 +312,23 @@ const ExploreScreen: React.FC = () => {
 
   // Calculate average rating for a salon
   const getAverageRating = (salon: Salon) => {
-    if (!salon.ratings_received || salon.ratings_received.length === 0) {
-      return 0;
+    // Prefer precomputed rating if available
+    const ratingAvgRaw = (salon as any).rating_avg ?? (salon as any).average_rating;
+    const ratingAvg = typeof ratingAvgRaw === 'string' ? parseFloat(ratingAvgRaw) : ratingAvgRaw;
+
+    let average: number | undefined =
+      typeof ratingAvg === 'number' && isFinite(ratingAvg) ? ratingAvg : undefined;
+
+    if (average === undefined) {
+      if (!salon.ratings_received || salon.ratings_received.length === 0) {
+        return 0;
+      }
+      const sum = salon.ratings_received.reduce((acc, rating) => acc + rating.rate, 0);
+      average = sum / salon.ratings_received.length;
     }
 
-    const sum = salon.ratings_received.reduce(
-      (acc, rating) => acc + rating.rate,
-      0,
-    );
-    return sum / salon.ratings_received.length;
+    // Floor to 1 decimal place e.g., 4.234223 -> 4.2
+    return Math.floor(average * 10) / 10;
   };
 
   // Map salons with distance and travel time information
@@ -600,11 +608,7 @@ const ExploreScreen: React.FC = () => {
                                 numberOfLines={1}>
                                 {item.name}
                               </Text>
-                              <Text
-                                style={styles.listCardProfession}
-                                numberOfLines={1}>
-                                {item.bio || t.explore.defaultProfession}
-                              </Text>
+                              {/* Description removed per request */}
                               <View style={styles.salonMetaRow}>
                                 <View style={styles.listCardRating}>
                                   <Icon
