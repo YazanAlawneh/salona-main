@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Dimensions,
   I18nManager,
+  ScrollView,
 } from 'react-native';
 import Colors from '../../constants/Colors';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -107,13 +108,16 @@ const BeautyServicesSection: React.FC<BeautyServicesSectionProps> = ({
         <Text style={[styles.title]}>{title}</Text>
       </View>
 
-      <View
+      <ScrollView
+        horizontal={true}
+        showsHorizontalScrollIndicator={false}
+        // contentContainerStyle={{padding:16 }}
         style={[
           styles.itemsContainer,
           data[0]?.isService ? styles.servicesGrid : styles.salonsGrid,
-          {
-            flexDirection: isRTL ? 'row-reverse' : 'row',
-          },
+          // {
+          //   flexDirection: isRTL ? 'row-reverse' : 'row',
+          // },
         ]}>
         {data.map(item => (
           <View
@@ -122,7 +126,7 @@ const BeautyServicesSection: React.FC<BeautyServicesSectionProps> = ({
             {renderItem(item)}
           </View>
         ))}
-      </View>
+      </ScrollView>
     </View>
   );
 };
@@ -186,8 +190,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   salonWrapper: {
-    width: '48.8%',
+    // width: '48.8%',
     marginBottom: 16,
+  marginRight: 16 ,
     // alignItems: 'flex-end',
     // alignSelf: 'flex-end',
     // justifyContent: 'flex-end',

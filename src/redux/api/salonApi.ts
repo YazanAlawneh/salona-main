@@ -545,7 +545,7 @@ export const salonApi = createApi({
       {success: boolean; salons: NearbySalon[]},
       {latitude: number; longitude: number; radius?: number}
     >({
-      query: ({latitude, longitude, radius = 10}) => ({
+      query: ({latitude, longitude, radius = 13}) => ({
         url: `nearby-salons?latitude=${latitude}&longitude=${longitude}&radius=${radius}`,
         method: 'GET',
       }),

@@ -1194,7 +1194,7 @@ const HomeScreen: React.FC = () => {
                 {nearbySalonsError ? (
                   // Show error state - don't show "no nearby salons" message
                   <View style={styles.errorContainer}>
-                    <Icon name="error-outline" size={48} color={Colors.red} />
+                    <Icon name="location-off" size={48} color={Colors.red} />
                     <Text style={styles.errorTitle}>
                       {t.home.nearbySalonsError.title}
                     </Text>
@@ -1213,7 +1213,7 @@ const HomeScreen: React.FC = () => {
                   // Show nearby salons when data is available
                   <BeautyServicesSection
                       title={t.home.nearbySalons}
-                      data={mappedSalons.slice(0, 4)}
+                      data={mappedSalons}
                       onItemPress={handleSalonPress}
                       onViewAllPress={handleViewAllPress}
                     />
