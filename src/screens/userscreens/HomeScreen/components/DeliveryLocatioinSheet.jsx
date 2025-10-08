@@ -152,6 +152,9 @@ const DeliveryLocationSheet = ({
     </View>
   );
 
+  // Check if current location is selected (when no saved address is selected but we have current location)
+  const isCurrentLocationSelected = !selectedAddress && currenctLocation;
+
   const renderFooter = () => (
     <View style={styles.footer}>
       <TouchableOpacity style={dynamicStyles.footerButton} onPress={addNewAddress}>
@@ -197,6 +200,9 @@ const DeliveryLocationSheet = ({
             {currenctLocation?.description || t.home.currentLocation}
           </Text> */}
         </View>
+        {isCurrentLocationSelected && (
+          <Icon name="checkmark-circle" size={20} color="#e37673" />
+        )}
         {loading && (
           <Icon
             name="refresh"

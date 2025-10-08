@@ -194,11 +194,18 @@ const HomeScreen: React.FC = () => {
   const [hasRequestedLocationPermission, setHasRequestedLocationPermission] =
     useState(false);
 
-  // Restore last selected address from storage on mount
+  // Load selected address from storage on mount and clear on logout
   useEffect(() => {
     const loadSelectedAddress = async () => {
+      if (!user) {
+        // Clear selected address when user logs out
+        dispatch(setSelectedAddress(null));
+        return;
+      }
+
       try {
-        const stored = await AsyncStorage.getItem('selectedAddress');
+        // Try to load selected address from storage for this user
+        const stored = await AsyncStorage.getItem(`selectedAddress_${user.id}`);
         if (stored) {
           const parsed = JSON.parse(stored);
           if (parsed && parsed.latitude && parsed.longitude) {
@@ -210,7 +217,7 @@ const HomeScreen: React.FC = () => {
       }
     };
     loadSelectedAddress();
-  }, [dispatch]);
+  }, [user, dispatch]);
 
   // RTK Query hooks
   const {data: salonsData, isLoading: salonsLoading} = useGetAllSalonsQuery({});
@@ -233,21 +240,32 @@ const HomeScreen: React.FC = () => {
     (state: RootState) => state.salons.selectedAddress,
   );
 
-  // Nearby salons query - only runs when we have coordinates
+  // Nearby salons query - use selected address or fall back to current location
   const nearbySalonsQueryParams = selectedAddress && selectedAddress.latitude && selectedAddress.longitude
     ? {
         latitude: selectedAddress.latitude,
         longitude: selectedAddress.longitude,
         radius: 20,
+        limit: 10,
+      }
+    : currentLocation
+    ? {
+        latitude: currentLocation.lat,
+        longitude: currentLocation.lng,
+        radius: 20,
+        limit: 10,
       }
     : {
         latitude: 0,
         longitude: 0,
         radius: 20,
+        limit: 10,
       };
 
   console.log('🔍 [DEBUG] [HomeScreen] Nearby salons query params:', nearbySalonsQueryParams);
   console.log('🔍 [DEBUG] [HomeScreen] Selected address:', selectedAddress);
+  console.log('🔍 [DEBUG] [HomeScreen] Current location:', currentLocation);
+  console.log('🔍 [DEBUG] [HomeScreen] Location source:', selectedAddress ? 'selected address' : currentLocation ? 'current location' : 'none');
 
   const {data: nearbySalonsData, isLoading: nearbySalonsLoading, error: nearbySalonsError} =
     useGetNearbySalonsQuery(nearbySalonsQueryParams);
@@ -255,8 +273,59 @@ const HomeScreen: React.FC = () => {
   // Extract data from RTK Query responses
   const ads = Array.isArray(adsData) ? adsData : [];
   const categories = categoriesData?.categories || [];
-  const userAddresses = addressesData?.addresses || [];
-  const nearbySalons = nearbySalonsData?.salons || [];
+  const rawUserAddresses = addressesData?.addresses || [];
+  const rawNearbySalons = nearbySalonsData?.salons || [];
+  
+  // Limit nearby salons to 10 for home screen
+  const nearbySalons = rawNearbySalons.slice(0, 10);
+
+  // Debug logging for nearby salons count
+  console.log('🔍 [DEBUG] [HomeScreen] Nearby salons count:', {
+    raw: rawNearbySalons?.length || 0,
+    limited: nearbySalons?.length || 0,
+    limit: 10
+  });
+
+  // Filter out duplicate addresses based on coordinates and description
+  const userAddresses = useMemo(() => {
+    const uniqueAddresses = [];
+    const seen = new Set();
+
+    // Sort addresses by creation date (newest first) to keep the most recent version
+    const sortedAddresses = [...rawUserAddresses].sort((a, b) => {
+      const dateA = new Date(a.created_at || 0);
+      const dateB = new Date(b.created_at || 0);
+      return dateB.getTime() - dateA.getTime();
+    });
+
+    for (const address of sortedAddresses) {
+      // Create a unique key based on coordinates (rounded to 3 decimal places for ~100m precision)
+      // and normalized description
+      const lat = Math.round(address.latitude * 1000) / 1000;
+      const lng = Math.round(address.longitude * 1000) / 1000;
+      const normalizedDesc = address.description?.toLowerCase().trim().replace(/\s+/g, ' ');
+      const key = `${lat},${lng},${normalizedDesc}`;
+      
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueAddresses.push(address);
+      } else {
+        console.log('🔍 [DEBUG] [HomeScreen] Filtered duplicate address:', {
+          description: address.description,
+          coordinates: `${address.latitude}, ${address.longitude}`,
+          key
+        });
+      }
+    }
+
+    console.log('🔍 [DEBUG] [HomeScreen] Address filtering:', {
+      original: rawUserAddresses.length,
+      filtered: uniqueAddresses.length,
+      removed: rawUserAddresses.length - uniqueAddresses.length
+    });
+
+    return uniqueAddresses;
+  }, [rawUserAddresses]);
 
   // Debug logging
   console.log('🔍 [DEBUG] [HomeScreen] RTK Query Data:', {
@@ -371,7 +440,36 @@ const HomeScreen: React.FC = () => {
           longitude: data.location.lng,
           accuracy: data.accuracy
         });
-        setCurrentLocation(data.location);
+        
+        // Get address from coordinates
+        try {
+          const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${data.location.lat},${data.location.lng}&key=${GOOGLE_MAPS_API_KEY}`;
+          const geocodeResponse = await fetch(geocodeUrl);
+          const geocodeData = await geocodeResponse.json();
+          
+          if (geocodeData.results && geocodeData.results[0]) {
+            const addressDescription = geocodeData.results[0].formatted_address;
+            console.log('✅ [DEBUG] [HomeScreen] Found address:', addressDescription);
+            setCurrentLocation({
+              lat: data.location.lat,
+              lng: data.location.lng,
+              description: addressDescription
+            });
+          } else {
+            setCurrentLocation({
+              lat: data.location.lat,
+              lng: data.location.lng,
+              description: t.home.currentLocation
+            });
+          }
+        } catch (geocodeError) {
+          console.log('⚠️ [DEBUG] [HomeScreen] Geocoding failed, using coordinates only:', geocodeError);
+          setCurrentLocation({
+            lat: data.location.lat,
+            lng: data.location.lng,
+            description: t.home.currentLocation
+          });
+        }
         return;
       }
     } catch (googleError) {
@@ -384,22 +482,52 @@ const HomeScreen: React.FC = () => {
 
       return new Promise<void>((resolve, reject) => {
         Geolocation.getCurrentPosition(
-          (position: any) => {
+          async (position: any) => {
             console.log('✅ [DEBUG] [HomeScreen] Location obtained from native geolocation:', {
               latitude: position.coords.latitude,
               longitude: position.coords.longitude,
               accuracy: position.coords.accuracy
             });
-            setCurrentLocation({
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-            });
+            
+            // Get address from coordinates
+            try {
+              const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.coords.latitude},${position.coords.longitude}&key=${GOOGLE_MAPS_API_KEY}`;
+              const geocodeResponse = await fetch(geocodeUrl);
+              const geocodeData = await geocodeResponse.json();
+              
+              if (geocodeData.results && geocodeData.results[0]) {
+                const addressDescription = geocodeData.results[0].formatted_address;
+                console.log('✅ [DEBUG] [HomeScreen] Found address:', addressDescription);
+                setCurrentLocation({
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude,
+                  description: addressDescription
+                });
+              } else {
+                setCurrentLocation({
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude,
+                  description: t.home.currentLocation
+                });
+              }
+            } catch (geocodeError) {
+              console.log('⚠️ [DEBUG] [HomeScreen] Geocoding failed, using coordinates only:', geocodeError);
+              setCurrentLocation({
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+                description: t.home.currentLocation
+              });
+            }
             resolve();
           },
           (error: any) => {
             console.error('❌ [DEBUG] [HomeScreen] Native geolocation error:', error);
             // Set fallback location
-            setCurrentLocation({lat: 31.95, lng: 35.91});
+            setCurrentLocation({
+              lat: 31.95, 
+              lng: 35.91,
+              description: t.home.currentLocation
+            });
             resolve(); // Don't reject, just use fallback
           },
           {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
@@ -408,7 +536,11 @@ const HomeScreen: React.FC = () => {
     } catch (nativeError) {
       console.error('❌ [DEBUG] [HomeScreen] Native geolocation failed:', nativeError);
       // Set fallback location
-      setCurrentLocation({lat: 31.95, lng: 35.91});
+      setCurrentLocation({
+        lat: 31.95, 
+        lng: 35.91,
+        description: t.home.currentLocation
+      });
     }
   };
 
@@ -422,12 +554,17 @@ const HomeScreen: React.FC = () => {
   const handleAddressSelect = useCallback(
     async (address: any) => {
       dispatch(setSelectedAddress(address));
-      try {
-        await AsyncStorage.setItem('selectedAddress', JSON.stringify(address));
-      } catch (_) {
-        // ignore storage errors
-      }
       setIsAddressModalVisible(false);
+      
+      // Save selected address per user
+      if (user) {
+        try {
+          await AsyncStorage.setItem(`selectedAddress_${user.id}`, JSON.stringify(address));
+        } catch (e) {
+          // ignore storage errors
+        }
+      }
+      
       try {
         await updatePrimaryAddress(Number(address.id));
         console.log('Address selected and set as primary');
@@ -435,7 +572,7 @@ const HomeScreen: React.FC = () => {
         console.error('Error updating primary address:', error);
       }
     },
-    [dispatch, updatePrimaryAddress],
+    [dispatch, updatePrimaryAddress, user],
   );
 
   const handleCurrentLocationSelect = useCallback(
@@ -457,7 +594,7 @@ const HomeScreen: React.FC = () => {
         // Fallback to existing currentLocation if no data passed
         const currentLocationAddress = {
           id: 'current-location',
-          description: 'Current Location',
+          description: (currentLocation as any).description || 'Current Location',
           latitude: (currentLocation as {lat: number; lng: number}).lat,
           longitude: (currentLocation as {lat: number; lng: number}).lng,
           isPrimary: false,
@@ -473,7 +610,7 @@ const HomeScreen: React.FC = () => {
           if (currentLocation) {
             const currentLocationAddress = {
               id: 'current-location',
-              description: 'Current Location',
+              description: (currentLocation as any).description || 'Current Location',
               latitude: (currentLocation as {lat: number; lng: number}).lat,
               longitude: (currentLocation as {lat: number; lng: number}).lng,
               isPrimary: false,
@@ -593,8 +730,14 @@ const HomeScreen: React.FC = () => {
   };
 
   const {isGuestMode, exitToLogin, exitToSignup} = useGuestMode();
-  // Initialize location permission check on mount
+  // Initialize location permission check on mount - only if no selected address
   useEffect(() => {
+    // Only check location permission if we don't have a selected address
+    if (selectedAddress) {
+      console.log('🔍 [DEBUG] [HomeScreen] Selected address exists, skipping location permission check');
+      return;
+    }
+
     // Check if we should show location permission modal
     const checkLocationPermission = async () => {
       try {
@@ -634,15 +777,18 @@ const HomeScreen: React.FC = () => {
 
     checkLocationPermission();
     requestUserPermission();
-  }, [hasRequestedLocationPermission]);
+  }, [hasRequestedLocationPermission, selectedAddress]);
 
-  // Set primary address when addresses are loaded
+  // Set primary address when addresses are loaded, or get current location if no addresses
   useEffect(() => {
     if (userAddresses.length > 0 && !selectedAddress) {
       const primaryAddress = userAddresses.find(addr => addr.is_primary === 1);
       if (primaryAddress) {
         dispatch(setSelectedAddress(primaryAddress as unknown as Address));
       }
+    } else if (userAddresses.length === 0 && !selectedAddress && !currentLocation) {
+      // No addresses and no current location, try to get current location
+      getCurrentLocation();
     }
   }, [userAddresses, selectedAddress, dispatch]);
 
@@ -1039,7 +1185,11 @@ const HomeScreen: React.FC = () => {
                       {t.home.amAt}
                     </Text> */}
                     <Text style={styles.addressText} numberOfLines={1}>
-                      {selectedAddress ? selectedAddress.description : ''}
+                      {selectedAddress 
+                        ? selectedAddress.description 
+                        : currentLocation 
+                        ? (currentLocation as any).description || t.home.currentLocation
+                        : t.home.selectAddress}
                     </Text>
                     <Icon name="chevron-down" size={20} color={Colors.black} />
                   </View>

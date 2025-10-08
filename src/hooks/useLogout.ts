@@ -1,6 +1,7 @@
 import {useLogoutMutation} from '../redux/api/authApi';
 import {useDispatch} from 'react-redux';
 import {logout} from '../redux/slices/authSlice';
+import {clearSelectedAddress} from '../redux/slices/salonSlice';
 import {Alert} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from '../contexts/TranslationContext';
@@ -16,7 +17,9 @@ const useLogout = () => {
       // console.log('Logout API response:', response);
       console.log('logout trying');
       // Dispatch logout action which will clear auth state
-      dispatch(logout()); 
+      dispatch(logout());
+      // Clear selected address when logging out
+      dispatch(clearSelectedAddress()); 
       
       // Show success message
       // Alert.alert('Success', 'You have been logged out.', [

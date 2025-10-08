@@ -115,6 +115,9 @@ const salonsSlice = createSlice({
     setSelectedAddress(state, action: PayloadAction<Address | null>) {
       state.selectedAddress = action.payload;
     },
+    clearSelectedAddress(state) {
+      state.selectedAddress = null;
+    },
   },
 });
 
@@ -127,6 +130,7 @@ export const {
   removeService,
   editService,
   addService,
-  setSelectedAddress
+  setSelectedAddress,
+  clearSelectedAddress
 } = salonsSlice.actions;
 export default salonsSlice.reducer;
