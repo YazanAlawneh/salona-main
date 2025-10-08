@@ -194,6 +194,24 @@ const HomeScreen: React.FC = () => {
   const [hasRequestedLocationPermission, setHasRequestedLocationPermission] =
     useState(false);
 
+  // Restore last selected address from storage on mount
+  useEffect(() => {
+    const loadSelectedAddress = async () => {
+      try {
+        const stored = await AsyncStorage.getItem('selectedAddress');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed && parsed.latitude && parsed.longitude) {
+            dispatch(setSelectedAddress(parsed));
+          }
+        }
+      } catch (e) {
+        // ignore storage errors
+      }
+    };
+    loadSelectedAddress();
+  }, [dispatch]);
+
   // RTK Query hooks
   const {data: salonsData, isLoading: salonsLoading} = useGetAllSalonsQuery({});
   const {data: adsData, isLoading: adsLoading, error: adsError} = useGetAdsQuery();
@@ -404,6 +422,11 @@ const HomeScreen: React.FC = () => {
   const handleAddressSelect = useCallback(
     async (address: any) => {
       dispatch(setSelectedAddress(address));
+      try {
+        await AsyncStorage.setItem('selectedAddress', JSON.stringify(address));
+      } catch (_) {
+        // ignore storage errors
+      }
       setIsAddressModalVisible(false);
       try {
         await updatePrimaryAddress(Number(address.id));
