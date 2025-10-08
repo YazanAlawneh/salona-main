@@ -16,6 +16,24 @@ interface ReviewsTabProps {
 }
 const ReviewsTab: React.FC<ReviewsTabProps> = ({reviews}) => {
   const { isRTL } = useTranslation();
+
+  const locale = isRTL ? 'ar-JO' : 'en-US';
+  const formatDate = (isoString: string): string => {
+    try {
+      const date = new Date(isoString);
+      if (isNaN(date.getTime())) return isoString || 'N/A';
+      return date.toLocaleString(locale, {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      });
+    } catch (_) {
+      return isoString || 'N/A';
+    }
+  };
   return (
     <FlatList
       data={reviews || []}
@@ -25,7 +43,7 @@ const ReviewsTab: React.FC<ReviewsTabProps> = ({reviews}) => {
           reviewerName={`User ${item.user_id}`}
           rating={item.rate}
           review={item.message}
-          time={item.created_at || 'N/A'}
+          time={formatDate(item.created_at)}
         />
       )}
       contentContainerStyle={styles.reviewsList}
