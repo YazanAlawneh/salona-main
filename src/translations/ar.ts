@@ -84,6 +84,8 @@ export const ar = {
       mustAcceptTerms: 'يجب الموافقة على الشروط والاحكام للاستمرار',
       signupFailed: 'فشل إنشاء الحساب',
       invalidPhoneNumber: 'رقم الهاتف يجب أن يكون 9 أو 10 أرقام',
+      emailAlreadyTaken: 'هذا البريد الإلكتروني مسجل بالفعل. حاول تسجيل الدخول أو استخدم بريدًا آخر.',
+      phoneNumberAlreadyTaken: 'هذا الرقم مسجّل بالفعل. حاول تسجيل الدخول أو استخدم رقمًا آخر.',
       registrationFailed: 'فشل إنشاء الحساب',
       passwordTooShort: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل.',
     },

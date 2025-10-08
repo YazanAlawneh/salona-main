@@ -81,7 +81,7 @@ export const en = {
       signupFailed: 'Signup failed',
       invalidPhoneNumber: 'Phone number must be 9 or 10 digits.',
       emailAlreadyTaken: 'The email has already been taken.',
-      phoneNumberAlreadyTaken: 'The phone number has already been taken.',
+      phoneNumberAlreadyTaken: 'This phone number is already registered. Try signing in or use a different number.',
       registrationFailed: 'Registration failed',
       passwordTooShort: 'Password must be at least 8 characters long.',
     },
