@@ -8,6 +8,7 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+  [FIRApp configure];
 
   self.moduleName = @"Bella";
   // You can add your custom initial props in the dictionary below.
