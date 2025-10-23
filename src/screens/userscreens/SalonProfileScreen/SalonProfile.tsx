@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   FlatList,
   ScrollView,
   Modal,
@@ -11,8 +10,8 @@ import {
   Dimensions,
   ImageBackground,
   Share,
-  TextInput,
   StatusBar,
+  SafeAreaView,
 } from 'react-native';
 import ProfileHeader from '../../../components/ProfileHeader/ProfileHeader';
 import {useNavigation, useRoute} from '@react-navigation/native';
@@ -586,8 +585,10 @@ const SalonProfileScreen = () => {
         style={StyleSheet.absoluteFillObject}
         resizeMode="cover"
       />
-      <View style={[styles.mainContainer, {backgroundColor: 'transparent'}]}>
+      <SafeAreaView
+        style={[styles.mainContainer, {backgroundColor: 'transparent'}]}>
         <ScrollView
+          showsVerticalScrollIndicator={false}
           style={[styles.scrollView, {backgroundColor: 'transparent'}]}>
           <View style={[styles.container, {backgroundColor: 'transparent'}]}>
             <ProfileHeader
@@ -712,7 +713,7 @@ const SalonProfileScreen = () => {
               </TouchableOpacity>
             </View>
           )}
-      </View>
+      </SafeAreaView>
     </View>
   );
 };

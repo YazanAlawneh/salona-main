@@ -17,7 +17,7 @@ import {useGuestMode} from '../../../contexts/GuestModeContext';
 import LinearGradient from 'react-native-linear-gradient';
 
 const LoginSignupScreen = ({navigation}: {navigation: any}) => {
-  const {t} = useTranslation();
+  const {t, isRTL} = useTranslation();
   const {setGuestMode} = useGuestMode();
   const route = useRoute();
   const {targetScreen} =
@@ -57,7 +57,7 @@ const LoginSignupScreen = ({navigation}: {navigation: any}) => {
       source={require('../../../assets/images/onboarding-new.jpg')}
       style={{flex: 1}}
       resizeMode="cover">
-      <SafeAreaView style={{flex: 1}}>
+      <SafeAreaView style={{flex: 1}} edges={['top']}>
         <View style={styles.container}>
           <TouchableOpacity
             onPress={handleProviderLogin}
@@ -106,15 +106,33 @@ const LoginSignupScreen = ({navigation}: {navigation: any}) => {
                 onPress={handleSignup}
                 style={[styles.signupButton, {borderColor: Colors.gold}]}
               /> */}
-              <Text style={styles.signInTxt}>
-                {t.loginSignup.dontHaveAnAccount}
-                {'  '}
-                <TouchableOpacity onPress={handleSignup}>
-                  <Text style={styles.loginTxtSapan}>
-                    {t.loginSignup.signup}
-                  </Text>
-                </TouchableOpacity>
-              </Text>
+              <View style={styles.signInTxtContainer}>
+                {isRTL ? (
+                  <>
+                    <TouchableOpacity onPress={handleSignup}>
+                      <Text style={styles.loginTxtSapan}>
+                        {t.loginSignup.signup}
+                      </Text>
+                    </TouchableOpacity>
+                    <Text style={styles.signInTxt}>
+                      {'  '}
+                      {t.loginSignup.dontHaveAnAccount}
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.signInTxt}>
+                      {t.loginSignup.dontHaveAnAccount}
+                      {'  '}
+                    </Text>
+                    <TouchableOpacity onPress={handleSignup}>
+                      <Text style={styles.loginTxtSapan}>
+                        {t.loginSignup.signup}
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
             </View>
           </LinearGradient>
         </View>

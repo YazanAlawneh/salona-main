@@ -34,7 +34,10 @@ const ProviderStack = () => {
           component={ProviderBookingScreen}
         />
         <Stack.Screen name="ProviderChatList" component={ChatListScreen} />
-        <Stack.Screen name="ProviderChatScreen" component={ProviderChatScreen} />
+        <Stack.Screen
+          name="ProviderChatScreen"
+          component={ProviderChatScreen}
+        />
         <Stack.Screen name="ProviderAccount" component={ProviderAccount} />
         <Stack.Screen name="ProviderProfile" component={ProviderProfile} />
         <Stack.Screen

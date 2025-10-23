@@ -17,6 +17,7 @@ import useRegister from '../../../hooks/useRegister';
 import {useNavigation} from '@react-navigation/native';
 import {useTranslation} from '../../../contexts/TranslationContext';
 import ScreenWrapper from '../../../components/ScreenWrapper/ScreenWrapper';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
 const SignUpScreen = () => {
   const navigation = useNavigation<any>();
@@ -133,7 +134,7 @@ const SignUpScreen = () => {
   };
 
   return (
-    <ScreenWrapper>
+    <SafeAreaView style={{flex: 1}} backgroundColor="#fff">
       <StatusBar backgroundColor={Colors.customWhite} barStyle="dark-content" />
       <View style={styles.container}>
         <View style={styles.header}>
@@ -347,7 +348,7 @@ const SignUpScreen = () => {
           </TouchableOpacity>
         </ScrollView>
       </View>
-    </ScreenWrapper>
+    </SafeAreaView>
   );
 };
 
