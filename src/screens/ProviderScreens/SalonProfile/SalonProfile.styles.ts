@@ -242,7 +242,6 @@ const styles = StyleSheet.create({
   editButtonRTL: {
     marginRight: 0,
     marginLeft: 10,
-
   },
   blockTimeButton: {
     backgroundColor: Colors.gold,
@@ -262,7 +261,7 @@ const styles = StyleSheet.create({
   },
   // About Tab Styles
   aboutContainer: {
-    paddingTop:20,
+    paddingTop: 20,
     padding: 0,
     flex: 1,
     width: '100%',
@@ -292,7 +291,6 @@ const styles = StyleSheet.create({
     color: Colors.white,
     // flex: 0.7,
     textAlign: 'left',
-   
   },
   description: {
     fontSize: 14,
@@ -341,14 +339,13 @@ const styles = StyleSheet.create({
   },
   valueRTL: {
     // textAlign: 'right',
-   marginHorizontal: 10,
+    marginHorizontal: 10,
   },
   timeContainerRTL: {
     flexDirection: 'row',
-    
+
     alignItems: 'center',
     flex: 1,
-    
   },
   // Modal Styles
   modalOverlay: {
@@ -439,8 +436,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   viewerCloseButton: {
-    backgroundColor: Colors.goldTransparent20,
-    // backgroundColor: 'rgba(195, 192, 192, 0.59)',
+    // backgroundColor: Colors.goldTransparent20,
+    backgroundColor: 'rgba(175, 175, 175, 0.8)',
     padding: 12,
     borderRadius: 25,
     width: 50,

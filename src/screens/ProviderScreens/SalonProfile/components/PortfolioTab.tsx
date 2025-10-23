@@ -222,7 +222,8 @@ const PortfolioTab: React.FC<PortfolioTabProps> = ({
         ]}
         onPress={() => openViewer(index)}>
         <Image
-          source={{uri: `https://bella-glam.com/${item.file_path}`}}
+          source={{uri: `https://bella-glam.com/storage/${item.file_path}`}}
+          // source={{uri: `https://bella-glam.com/${item.file_path}`}}
           style={[
             styles.portfolioImage,
             {
@@ -272,7 +273,7 @@ const PortfolioTab: React.FC<PortfolioTabProps> = ({
       <TouchableOpacity
         style={styles.viewerCloseButton}
         onPress={() => setViewerVisible(false)}>
-        <Icon name="close" size={24} color={Colors.white} />
+        <Icon name="close" size={24} color={Colors.black} />
       </TouchableOpacity>
     </View>
   );
@@ -306,7 +307,7 @@ const PortfolioTab: React.FC<PortfolioTabProps> = ({
 
       <ImageView
         images={displayAssets.map(img => ({
-          uri: `https://bella-glam.com/${img.file_path}`,
+          uri: `https://bella-glam.com/storage/${img.file_path}`,
         }))}
         imageIndex={currentIndex}
         visible={isViewerVisible}
