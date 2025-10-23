@@ -51,8 +51,14 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginBottom: 20,
   },
-  signInTxt: {
+  signInTxtContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 10,
+    flexWrap: 'wrap', // In case text is long
+  },
+  signInTxt: {
     color: Colors.customBlack,
     fontSize: 16,
     lineHeight: 24,
@@ -60,26 +66,24 @@ const styles = StyleSheet.create({
   loginTxtSapan: {
     color: Colors.gold,
     fontWeight: '600',
-    fontSize: 12,
+    fontSize: 16, // Match the parent font size for alignment
+    lineHeight: 24, // Match the parent line height
   },
 
-  signUpProviderTxt: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.gold,
-    backgroundColor: 'white',
-    padding: 10,
-    borderRadius: 20,
-    // position: 'absolute',
-    // top: 40,
-    // right: 10,
-    // zIndex: 2,
-  },
   signUpProviderWrapper: {
     position: 'absolute',
     top: 40,
     right: 10,
     zIndex: 2,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    overflow: 'hidden', // This ensures the border radius clips properly
+  },
+  signUpProviderTxt: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.gold,
+    padding: 10,
   },
 });
 

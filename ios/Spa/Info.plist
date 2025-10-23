@@ -62,6 +62,7 @@
 		<string>Maitree-Regular.ttf</string>
 		<string>Maitree-SemiBold.ttf</string>
 		<string>Poppins-SemiBold.ttf</string>
+		    <string>MaterialIcons.ttf</string>
 	</array>
 </dict>
 </plist>
